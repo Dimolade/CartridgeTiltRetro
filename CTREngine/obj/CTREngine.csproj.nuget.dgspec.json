@@ -1,18 +1,19 @@
 {
   "format": 1,
   "restore": {
-    "/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/CTREngine.csproj": {}
+    "/home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/CTREngine.csproj": {}
   },
   "projects": {
-    "/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/CTREngine.csproj": {
+    "/home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/CTREngine.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/CTREngine.csproj",
+        "projectUniqueName": "/home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/CTREngine.csproj",
         "projectName": "CTREngine",
-        "projectPath": "/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/CTREngine.csproj",
+        "projectPath": "/home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/CTREngine.csproj",
         "packagesPath": "/home/deck/.nuget/packages/",
-        "outputPath": "/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/obj/",
+        "outputPath": "/home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/obj/",
         "projectStyle": "PackageReference",
+        "crossTargeting": true,
         "configFilePaths": [
           "/home/deck/.nuget/NuGet/NuGet.Config"
         ],
@@ -99,19 +100,7 @@
               "version": "[8.0.13, 8.0.13]"
             },
             {
-              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
-              "version": "[8.0.13, 8.0.13]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Host.win-x64",
-              "version": "[8.0.13, 8.0.13]"
-            },
-            {
               "name": "Microsoft.NETCore.App.Runtime.linux-x64",
-              "version": "[8.0.13, 8.0.13]"
-            },
-            {
-              "name": "Microsoft.NETCore.App.Runtime.win-x64",
               "version": "[8.0.13, 8.0.13]"
             }
           ],
@@ -125,9 +114,6 @@
       },
       "runtimes": {
         "linux-x64": {
-          "#import": []
-        },
-        "win-x64": {
           "#import": []
         }
       }

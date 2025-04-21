@@ -1,29 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Set framework(s) depending on OS -->
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+    <TargetFrameworks>net8.0</TargetFrameworks>
+  </PropertyGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-
-    <!-- Enable single-file publishing and self-contained builds -->
-    <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
-    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-
-    <!-- Optional: reduce file clutter -->
-    <PublishTrimmed>false</PublishTrimmed> <!-- Set to true if you're trimming assemblies -->
+    <PublishSingleFile>true</PublishSingleFile>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
-  <!-- Multiple runtime targets -->
-  <PropertyGroup>
-    <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
+  <!-- Platform-specific runtime IDs -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <!-- Common packages -->
   <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.9.0" />
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.9.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.13.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.Scripting" Version="4.13.0" />
@@ -32,6 +39,18 @@
     <PackageReference Include="System.CodeDom" Version="9.0.2" />
   </ItemGroup>
 
+  <!-- GTK for Linux -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.9.0" />
+  </ItemGroup>
+
+  <!-- Windows-only platforms -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="Eto.Platform.Windows" Version="2.9.0" />
+    <PackageReference Include="Eto.Platform.Wpf" Version="2.9.0" />
+  </ItemGroup>
+
+  <!-- Resources -->
   <ItemGroup>
     <Content Include="MonacoEditor\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

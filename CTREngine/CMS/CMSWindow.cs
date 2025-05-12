@@ -198,6 +198,14 @@ namespace CMS
                     SetTextInEditor(wv, File.ReadAllText(path));
                 }
             }
+            if (name == "Load VSE File")
+            {
+                string path = CTR.UIButtons.FileSelect("Choose VSE File", new List<string>() {".vse"}, callFrom);
+                if (path == null)
+                    return;
+
+                //AddVSEFileIntelliSense(Newtonsoft.Json.JsonConvert.DeserializeObject<VSEFile>(File.ReadAllText(path)), wv);
+            }
             if (name == "Export Script to Project")
             {
                 CTR.Projects.Project p = ProjectPopUp("Choose Target Project", "Choose the Project to export this script to:", callFrom);
@@ -247,6 +255,101 @@ namespace CMS
             string editorText = result.ToString();
 
             return editorText;
+        }
+
+        /*public void AddVSEFileIntelliSense(VSEFile file, WebView webView)
+        {
+            foreach (CPPVariable v in file.variables)
+            {
+                AddIntelliSenseVariable(webView, file.MakeCMSExpression(v.fullAccessPath), ConvertVSEVariableToType(v));
+            }
+            foreach (CPPFunction f in file.functions)
+            {
+                AddIntelliSenseVariable(webView, file.MakeCMSExpression(f.fullAccessPath), ConvertVSEFunctionToType(f));
+            }
+        }
+
+        public string ConvertVSEVariableToType(CPPVariable p)
+        {
+            string t = "";
+            if (p.ctype == "int" || p.ctype == "float" || p.ctype == "double")
+            {
+                t = "number";
+            }
+            else
+            {
+                t = p.ctype;
+            }
+            return t;
+        }
+
+        public string ConvertVSEFunctionToType(CPPFunction func)
+        {
+            string cur = "(";
+            int i = 0;
+            foreach (CPPParameter p in func.parameters.parameters)
+            {
+                string t = "";
+                if (p.ctype == "int" || p.ctype == "float" || p.ctype == "double")
+                {
+                    t = "number";
+                }
+                else
+                {
+                    t = p.ctype;
+                }
+                cur += p.name+": "+t;
+                if (i+1 < func.parameters.parameters.Count)
+                {
+                    cur+=",";
+                }
+            }
+            cur += ") => "+func.returnType;
+            return cur;
+        }*/
+
+        public void AddIntelliSenseVariable(WebView webView, string toAdd, string type = "any")
+        {
+            // Split by dot to figure out the hierarchy
+            var parts = toAdd.Split('.');
+            if (parts.Length < 2)
+                throw new ArgumentException("Format must be 'Namespace.Variable' or 'Namespace.Class.Variable'");
+
+            string namespaceName = parts[0];
+            string declaration = "";
+
+            if (parts.Length == 2)
+            {
+                // Format: Namespace.Variable
+                string varName = parts[1];
+                declaration = $@"
+        declare namespace {namespaceName} {{
+            const {varName}: {type};
+        }};";
+            }
+            else if (parts.Length == 3)
+            {
+                // Format: Namespace.Class.Variable
+                string className = parts[1];
+                string varName = parts[2];
+                declaration = $@"
+        declare namespace {namespaceName} {{
+            class {className} {{
+                static {varName}: {type};
+            }}
+        }};";
+            }
+            else
+            {
+                throw new ArgumentException("Only supports up to Namespace.Class.Variable");
+            }
+
+            // Inject into Monaco using JavaScript in WebView
+            string js = $@"
+                monaco.languages.typescript.javascriptDefaults.addExtraLib(`{declaration}`, 'ts:{toAdd}.d.ts');
+            ";
+
+            webView.ExecuteScript(js);
         }
 
         public void SetTextInEditor(WebView webView, string newText)
@@ -378,9 +481,5 @@ namespace CMS
 
             return inputBox.Text;
         }
-    }
-    public static class CMSTester
-    {
-
     }
 }

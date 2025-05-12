@@ -133,10 +133,12 @@ public class AssetMaker : Form
         }
         else if (name == "New Asset...")
         {
-            DropdownDialog D = new DropdownDialog("New Asset...", Enum.GetNames(typeof(AssetType)).ToList());
+            List<string> ns = Enum.GetNames(typeof(AssetType)).ToList();
+            ns.Add("VSE File");
+            DropdownDialog D = new DropdownDialog("New Asset...", ns);
             D.ShowModal(this);
 
-            if (D.yes)
+            if (D.yes && D.selectedIndex+1 < ns.Count-1)
             {
                 AssetType AP = (AssetType)D.selectedIndex;
                 if (AP == AssetType.ImageFont)
@@ -153,6 +155,20 @@ public class AssetMaker : Form
                             layout.Items[1] = content; // Replace old content
                     }
                 }
+            }
+            else if (D.yes && D.selectedIndex+1 == ns.Count)
+            {
+                CTRVSEWindow ctrWindow = new CTRVSEWindow(y);
+
+                var content = ctrWindow.CreateContent(SelectFile);
+
+                    if (Content is StackLayout layout)
+                    {
+                        if (layout.Items.Count == 1)
+                            layout.Items.Add(content);
+                        else
+                            layout.Items[1] = content;
+                    }
             }
         }
     }
@@ -173,6 +189,78 @@ public class AssetMaker : Form
         }
 
         return null;
+    }
+}
+
+public class CTRVSEWindow
+{
+    private int y;
+    private StackLayout layout;
+
+    public CTRVSEWindow(int availableHeight)
+    {
+        y = availableHeight;
+    }
+
+    public StackLayout CreateContent(Func<string> selectFileCallback)
+    {
+        //VSEFile currentVSE;
+        var button1 = new Button
+        {
+            Text = "Select Header Host Folder"
+        };
+
+        var button2 = new Button
+        {
+            Text = "Export VSE File"
+        };
+
+        var stack = new StackLayout
+        {
+            Orientation = Orientation.Vertical,
+            Height = y - 225, // Assuming 'y' is your screen height or container height
+            Items =
+            {
+                button1,
+                button2
+            }
+        };
+
+        List<string> GetHeaderFiles(string directory)
+        {
+            if (!Directory.Exists(directory))
+                throw new DirectoryNotFoundException($"Directory not found: {directory}");
+
+            var files = Directory.GetFiles(directory, "*.h", SearchOption.AllDirectories);
+            return new List<string>(files);
+        }
+
+        // Optional: Wire up click handlers
+        button1.Click += (s, e) =>
+        {
+            string result = selectFileCallback?.Invoke();
+            if (result == null) return;
+            Console.WriteLine("Selected: " + result);
+            foreach (string hfile in GetHeaderFiles(result))
+            {
+                
+            }
+        };
+
+        button2.Click += (s, e) =>
+        {
+            /*string path = CTR.FileManager.GetSaveFilePath(
+            "Save Visual Scripting Editor File",
+            new[] { "VSE File|vse" }
+            );
+
+            if (path != null)
+            {
+                //File.WriteAllText(path, JsonConvert.SerializeObject(currentVSE));
+            }*/
+        };
+
+        return stack;
     }
 }
 

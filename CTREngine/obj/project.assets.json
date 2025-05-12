@@ -2659,11 +2659,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/CTREngine.csproj",
+      "projectUniqueName": "/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/CTREngine.csproj",
       "projectName": "CTREngine",
-      "projectPath": "/home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/CTREngine.csproj",
+      "projectPath": "/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/CTREngine.csproj",
       "packagesPath": "/home/deck/.nuget/packages/",
-      "outputPath": "/home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/obj/",
+      "outputPath": "/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/obj/",
       "projectStyle": "PackageReference",
       "crossTargeting": true,
       "configFilePaths": [

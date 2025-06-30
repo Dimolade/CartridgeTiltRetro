@@ -8,7 +8,7 @@ namespace CTR.Window
     {
         public static void Start()
         {
-            new Application(Eto.Platforms.Gtk).Run(new MWindow());
+            new Application(Eto.Platform.Detect).Run(new MWindow());
         }
 
         public static ListBox ProjectsHolder;

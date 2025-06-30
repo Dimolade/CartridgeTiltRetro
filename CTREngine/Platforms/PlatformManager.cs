@@ -113,7 +113,7 @@ namespace CTR
                 okButton.Click += (sender, e) => { 
                     CTR.FileManager.Platforms.WritePlatform(
                         new CTR.Platform(idIB.Text, inputBox.Text, author.Text, pversion.Text, path, System.IO.Path.GetFileName(IconName), architecture.Text,
-                        new DotnetProject(System.IO.Path.Combine(path, "dotnet/"), inputBox.Text), Env.ctrVersion), IconName);
+                        new DotnetProject(System.IO.Path.Combine(path, "dotnet/"), inputBox.Text), Env.ctrVersion), IconName, null);
                     Result = inputBox.Text; Close(); };
 
                 cancelButton.Click += (sender, e) => { Result = "fuck you"; Close(); };
@@ -300,7 +300,7 @@ namespace CTR
             {
                 string plat = CTR.UIButtons.FileSelect("Select Platform", new List<string>() {".ctrplat"} ,callFrom);
                 if (plat == null) return;
-                CTR.FileManager.Paths.AddProject(plat);
+                CTR.FileManager.Paths.AddPlatform(plat, null);
             }
         }
 
@@ -309,11 +309,12 @@ namespace CTR
             if (platformIndex < 0 || platformIndex >= lastPlatforms.Count)
             {
                 Console.WriteLine("Invalid platform index selected.");
+                rightPanel.Items.Clear();
                 return;
             }
 
             rightPanel.Items.Clear();
-            rightPanel.Items.Add(new Label {Text = lastPlatforms[platformIndex].name});
+            rightPanel.Items.Add(new Label { Text = lastPlatforms[platformIndex].name });
 
             var buildPlatButton = new Button
             {
@@ -322,21 +323,38 @@ namespace CTR
                 Height = 30
             };
 
-            buildPlatButton.Click += (sender, e) => {OnBuildPlatform(platformIndex);};
+            buildPlatButton.Click += (sender, e) => { OnBuildPlatform(platformIndex); };
             rightPanel.Items.Add(buildPlatButton);
 
             if (System.IO.File.Exists(System.IO.Path.Combine(lastPlatforms[platformIndex].installPath, "MainAssembly.dll")))
             {
-               var getPlatInfoButton = new Button
+                var getPlatInfoButton = new Button
                 {
                     Text = "Get Platform Info",
                     Width = 200,
                     Height = 30
                 };
 
-                getPlatInfoButton.Click += (sender, e) => {GetPlatformInfo(platformIndex);};
-                rightPanel.Items.Add(getPlatInfoButton); 
+                getPlatInfoButton.Click += (sender, e) => { GetPlatformInfo(platformIndex); };
+                rightPanel.Items.Add(getPlatInfoButton);
             }
+            
+            Button removeButton = new Button { Text = "Remove -" };
+            removeButton.Click += (sender, e) =>
+            {
+                var projects = CTR.FileManager.Platforms.GetPlatforms();
+                Console.WriteLine(projects.Count);
+                int selectedIndex = itemList.SelectedIndex;
+
+                if (selectedIndex >= 0 && selectedIndex < projects.Count)
+                {
+                    CTR.FileManager.Platforms.RemovePlatform(projects[selectedIndex].installPath);
+                    Console.WriteLine("Removing Platform!");
+                }
+
+                RefreshProjects();
+            };
+            rightPanel.Items.Add(removeButton);
         }
 
         private void OnBuildPlatform(int ind)

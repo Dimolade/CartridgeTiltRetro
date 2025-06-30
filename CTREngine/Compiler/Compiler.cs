@@ -23,7 +23,10 @@ namespace CTR
             }
 
             // Create the basic .NET console project
-            CreateProject();
+            if (!Directory.Exists(Path))
+            {
+                CreateProject();
+            }
         }
 
         // Method to create a new .NET project (Console App by default)

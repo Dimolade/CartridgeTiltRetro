@@ -63,13 +63,12 @@ namespace CTR
 
     public static class PlatformHandler
     {
-        public static void HandleNewProject(Platform project, string path, string realIconPath)
+        public static void HandleNewProject(Platform project, string path, string realIconPath, Eto.Forms.Form f)
         {
-            FileManager.Paths.AddPlatform(path);
+            FileManager.Paths.AddPlatform(path, f);
             System.IO.File.Copy(realIconPath, System.IO.Path.Combine(project.installPath, project.iconName));
             System.IO.File.Delete(System.IO.Path.Combine(project.installPath,"dotnet/Program.cs"));
             System.IO.File.WriteAllText(System.IO.Path.Combine(project.installPath,"dotnet/Main.cs"), Env.defaultPlatformScript);
-            CTR.PlatformManager.Events.Update();
         }
     }
     public static class Env

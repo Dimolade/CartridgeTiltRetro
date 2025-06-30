@@ -1,0 +1,13 @@
+
+class otherClass {
+
+}
+
+static class myClass inherits otherClass {
+
+    public int sampleInt = 0 ;
+    public CTRImage* chess ;
+
+    void Start ( ) { chess = Scene.CTRImage ( "ChessPiece" & "Game" & "chess" ) ; }
+
+}

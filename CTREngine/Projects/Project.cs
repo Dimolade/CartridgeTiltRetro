@@ -44,9 +44,15 @@ namespace CTR.Projects
             CTR.Projects.Events.Update();
         }
 
-        public static void OpenProjectEditor(Project p)
+        public static void OpenProjectEditor(Project p, string ctrProjPath)
         {
-            CTR.EditorWindow EW = new CTR.EditorWindow(p);
+            CTR.EditorWindow EW = new CTR.EditorWindow(p, ctrProjPath);
+            if (p.ctrVersion != Env.ctrVersion)
+            {
+                Eto.Forms.MessageBox.Show("Outdated Project, There Might and most likely WILL be issues Upgrading/Downgrading, the version has been Updated.");
+                p.ctrVersion = Env.ctrVersion;
+                File.WriteAllText(p.ctrProjPath, Newtonsoft.Json.JsonConvert.SerializeObject(p));
+            }
             EW.Show();
         }
     }

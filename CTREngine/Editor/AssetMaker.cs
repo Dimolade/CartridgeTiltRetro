@@ -72,7 +72,7 @@ public class AssetMaker : Form
 
         var fileMenu = new ButtonMenuItem { Text = "File" };
 
-        fileMenu.Click += (sender, e) => {ShowButtons(new List<string> { "Open File", "New Asset..." }, this);};
+        fileMenu.Click += (sender, e) => { ShowButtons(new List<string> { "Open File", "New Asset..." }, this); };
 
         menu.Items.Add(fileMenu);
 
@@ -87,22 +87,22 @@ public class AssetMaker : Form
         showingPButtons = !showingPButtons;
         if (showingPButtons)
         {
-        buttonPanel.Items.Clear(); // Clear previous buttons
+            buttonPanel.Items.Clear(); // Clear previous buttons
 
-        foreach (var name in platformNames)
-        {
-            var button = new Button
+            foreach (var name in platformNames)
             {
-                Text = name,
-                Width = 200,
-                Height = 30
-            };
+                var button = new Button
+                {
+                    Text = name,
+                    Width = 200,
+                    Height = 30
+                };
 
-            button.Click += (sender, e) => {Actions(name, callFrom);};
-            buttonPanel.Items.Add(button);
-        }
+                button.Click += (sender, e) => { Actions(name, callFrom); };
+                buttonPanel.Items.Add(button);
+            }
 
-        buttonPanel.Visible = true; // Make the button panel visible
+            buttonPanel.Visible = true; // Make the button panel Visible
         }
         else
         {
@@ -134,11 +134,10 @@ public class AssetMaker : Form
         else if (name == "New Asset...")
         {
             List<string> ns = Enum.GetNames(typeof(AssetType)).ToList();
-            ns.Add("VSE File");
             DropdownDialog D = new DropdownDialog("New Asset...", ns);
             D.ShowModal(this);
 
-            if (D.yes && D.selectedIndex+1 < ns.Count-1)
+            if (D.yes)
             {
                 AssetType AP = (AssetType)D.selectedIndex;
                 if (AP == AssetType.ImageFont)
@@ -155,20 +154,6 @@ public class AssetMaker : Form
                             layout.Items[1] = content; // Replace old content
                     }
                 }
-            }
-            else if (D.yes && D.selectedIndex+1 == ns.Count)
-            {
-                CTRVSEWindow ctrWindow = new CTRVSEWindow(y);
-
-                var content = ctrWindow.CreateContent(SelectFile);
-
-                    if (Content is StackLayout layout)
-                    {
-                        if (layout.Items.Count == 1)
-                            layout.Items.Add(content);
-                        else
-                            layout.Items[1] = content;
-                    }
             }
         }
     }
@@ -192,78 +177,6 @@ public class AssetMaker : Form
     }
 }
 
-public class CTRVSEWindow
-{
-    private int y;
-    private StackLayout layout;
-
-    public CTRVSEWindow(int availableHeight)
-    {
-        y = availableHeight;
-    }
-
-    public StackLayout CreateContent(Func<string> selectFileCallback)
-    {
-        //VSEFile currentVSE;
-        var button1 = new Button
-        {
-            Text = "Select Header Host Folder"
-        };
-
-        var button2 = new Button
-        {
-            Text = "Export VSE File"
-        };
-
-        var stack = new StackLayout
-        {
-            Orientation = Orientation.Vertical,
-            Height = y - 225, // Assuming 'y' is your screen height or container height
-            Items =
-            {
-                button1,
-                button2
-            }
-        };
-
-        List<string> GetHeaderFiles(string directory)
-        {
-            if (!Directory.Exists(directory))
-                throw new DirectoryNotFoundException($"Directory not found: {directory}");
-
-            var files = Directory.GetFiles(directory, "*.h", SearchOption.AllDirectories);
-            return new List<string>(files);
-        }
-
-        // Optional: Wire up click handlers
-        button1.Click += (s, e) =>
-        {
-            string result = selectFileCallback?.Invoke();
-            if (result == null) return;
-            Console.WriteLine("Selected: " + result);
-            foreach (string hfile in GetHeaderFiles(result))
-            {
-                
-            }
-        };
-
-        button2.Click += (s, e) =>
-        {
-            /*string path = CTR.FileManager.GetSaveFilePath(
-            "Save Visual Scripting Editor File",
-            new[] { "VSE File|vse" }
-            );
-
-            if (path != null)
-            {
-                //File.WriteAllText(path, JsonConvert.SerializeObject(currentVSE));
-            }*/
-        };
-
-        return stack;
-    }
-}
-
 public class CTRIFWindow
 {
     private int y;
@@ -272,6 +185,32 @@ public class CTRIFWindow
     public CTRIFWindow(int availableHeight)
     {
         y = availableHeight;
+    }
+    
+    public IIndirectBinding<Image> CreateImageBinding(int x = 32, int y = 32)
+    {
+        return Binding.Delegate<ListItem, Image>(item =>
+        {
+            try
+            {
+                var path = item?.Key;
+                if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
+                {
+                    using (var original = new Bitmap(path))
+                    {
+                        // Resize to 32x32 in RAM
+                        var resized = new Bitmap(original, x, y);
+                        return resized;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading image: {ex.Message}");
+            }
+
+            return null;
+        });
     }
 
     public StackLayout CreateContent(Func<string> selectFileCallback, string filePath = null)
@@ -288,11 +227,13 @@ public class CTRIFWindow
         var NewButton = new Button { Text = "New Character...", Width = 300, Height = 45 };
         var RemoveButton = new Button { Text = "Remove Character" };
         var SaveButton = new Button { Text = "Save CTR Image Font as File..." };
+        var imageDisp = new ImageView { Width = 350, Height = 350 };
 
         CTRIF currentIF = new CTRIF();
         int currentCharacter = -1;
 
-        SaveButton.Click += (sender,e) => {
+        SaveButton.Click += (sender, e) =>
+        {
 
             string path = GetSaveFilePath(
             "Save CTR Image Font",
@@ -345,45 +286,64 @@ public class CTRIFWindow
             return result == DialogResult.Ok ? dialog.FileName : null;
         }
 
-        // Refresh the list of characters in the charList
         void RefreshList()
         {
             charList.Items.Clear();
-            charList.Items.Add("Default Char");
+            charList.Items.Add(new ListItem { Text = "Default Char", Key = currentIF.defaultChar.filePath });
+            charList.ItemImageBinding = CreateImageBinding();
             foreach (var ch in currentIF.Chars)
-                charList.Items.Add($"Char: {ch.c}  ({System.IO.Path.GetFileName(ch.filePath)})");
+                charList.Items.Add(new ListItem { Text = $"Char: {ch.c}  ({System.IO.Path.GetFileName(ch.filePath)})", Key = ch.filePath });
         }
 
-        // Update the details shown for the selected character
         void UpdateDetails(int index)
         {
-            if (index == 0) // Default Char selected
+            if (index == 0)
             {
                 var dc = currentIF.defaultChar;
-                charName.Text = "Character: Default";
-                charBox.Text = dc.c.ToString();
-                charWidth.Text = dc.Width.ToString();
-                charHeight.Text = dc.Height.ToString();
-                imagePath.Text = $"Image Path: {dc.filePath}";
+                UpdDetails(dc);
             }
             else if (index > 0 && index - 1 < currentIF.Chars.Count) // Character selected
             {
                 var selectedChar = currentIF.Chars[index - 1];
-                charName.Text = $"Character: {selectedChar.c}";
-                charBox.Text = selectedChar.c.ToString();
-                charWidth.Text = selectedChar.Width.ToString();
-                charHeight.Text = selectedChar.Height.ToString();
-                imagePath.Text = $"Image Path: {selectedChar.filePath}";
+                UpdDetails(selectedChar);
             }
-            else // No character selected
+            else
             {
                 charName.Text = "Character: None";
                 charBox.Text = "";
                 imagePath.Text = "Image Path: None";
+                UpdDetails(null);
             }
         }
 
-        // Update the character's 'c' when charBox text changes
+        void UpdDetails(CTRIFChar dc)
+        {
+            if (dc != null)
+            {
+                charName.Text = "Character: Default";
+                charBox.Text = dc.c.ToString();
+                charWidth.Text = dc.Width.ToString();
+                charHeight.Text = dc.Height.ToString();
+                if (File.Exists(dc.filePath))
+                {
+                    imageDisp.Image = new Bitmap(dc.filePath);
+                    imageDisp.Visible = true;
+                }
+                else
+                {
+                    imageDisp.Visible = false;
+                }
+                imagePath.Text = $"Image Path: {dc.filePath}";
+            }
+            else
+            {
+                charName.Text = "Character: None";
+                charBox.Text = "";
+                imagePath.Text = "Image Path: None";
+                imageDisp.Visible = false;
+            }
+        }
+
         charBox.TextChanged += (sender, e) =>
         {
             if (charBox.Text.Length > 0)
@@ -395,10 +355,10 @@ public class CTRIFWindow
                     currentIF.Chars[currentCharacter - 1].c = newChar;
 
                 CTRIFChar ch = null;
-                if (currentCharacter > 0 && currentCharacter - 1 < currentIF.Chars.Count) {
-                    ch = currentIF.Chars[currentCharacter-1]; charList.Items[currentCharacter].Text = $"Char: {ch.c}  ({System.IO.Path.GetFileName(ch.filePath)})";}
-                //UpdateDetails(currentCharacter);
-                //charList.SelectedIndex = currentCharacter; // Keep the selected index
+                if (currentCharacter > 0 && currentCharacter - 1 < currentIF.Chars.Count)
+                {
+                    ch = currentIF.Chars[currentCharacter - 1]; charList.Items[currentCharacter].Text = $"Char: {ch.c}  ({System.IO.Path.GetFileName(ch.filePath)})";
+                }
             }
         };
 
@@ -433,17 +393,15 @@ public class CTRIFWindow
             }
         };
 
-        // Handle character selection from charList
         charList.SelectedIndexChanged += (sender, e) =>
         {
             currentCharacter = charList.SelectedIndex;
             UpdateDetails(currentCharacter);
         };
 
-        // Handle selecting the image path for the selected character
         selectIPButton.Click += (sender, e) =>
         {
-            string path = selectFileCallback(); // Get the path from the callback
+            string path = selectFileCallback();
             if (path != null)
             {
                 if (currentCharacter == 0)
@@ -451,20 +409,17 @@ public class CTRIFWindow
                 else if (currentCharacter > 0 && currentCharacter - 1 < currentIF.Chars.Count)
                     currentIF.Chars[currentCharacter - 1].filePath = path;
 
-                //UpdateDetails(currentCharacter);
                 imagePath.Text = $"Image Path: {path}";
+                RefreshList();
             }
         };
 
-        // Handle adding a new character
         NewButton.Click += (sender, e) =>
         {
             currentIF.Chars.Add(new CTRIFChar('0', "No Path Yet"));
             RefreshList();
-            //charList.SelectedIndex = currentIF.Chars.Count; // Select newly added character
         };
 
-        // Handle removing a character
         RemoveButton.Click += (sender, e) =>
         {
             if (currentCharacter > 0 && currentCharacter - 1 < currentIF.Chars.Count)
@@ -476,7 +431,6 @@ public class CTRIFWindow
             }
         };
 
-        // Layout for the window
         layout = new StackLayout
         {
             Orientation = Orientation.Vertical,
@@ -499,7 +453,7 @@ public class CTRIFWindow
                         {
                             Orientation = Orientation.Vertical,
                             Spacing = 10,
-                            Items = { charName, charBox,charWL,charWidth,charHL,charHeight, imagePath, selectIPButton, SaveButton }
+                            Items = { charName, charBox,charWL,charWidth,charHL,charHeight,imageDisp, imagePath, selectIPButton, SaveButton }
                         }
                     }
                 }

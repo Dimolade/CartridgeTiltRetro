@@ -27,13 +27,6 @@ namespace CTR
             
                 CTR.PlatformManager.PMW.Show();
             }
-            if (btn == "Open CMS IDE")
-            {
-                CMS.CMSIDEWindow cmsIDE;
-                cmsIDE = new CMS.CMSIDEWindow();
-            
-                cmsIDE.Show();
-            }
         }
 
         public static string FileSelect(string title, List<string> filters, Panel thing)

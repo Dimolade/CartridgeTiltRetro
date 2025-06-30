@@ -1,17 +1,22 @@
 {
   "version": 2,
-  "dgSpecHash": "llYzwLuVEOE=",
+  "dgSpecHash": "wK5ufzS+6+U=",
   "success": true,
   "projectFilePath": "/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/CTREngine.csproj",
   "expectedPackageFiles": [
     "/home/deck/.nuget/packages/atksharp/3.24.24.95/atksharp.3.24.24.95.nupkg.sha512",
     "/home/deck/.nuget/packages/cairosharp/3.24.24.95/cairosharp.3.24.24.95.nupkg.sha512",
+    "/home/deck/.nuget/packages/clangsharp/10.0.0-beta/clangsharp.10.0.0-beta.nupkg.sha512",
+    "/home/deck/.nuget/packages/cppast/0.8.0/cppast.0.8.0.nupkg.sha512",
     "/home/deck/.nuget/packages/eto.forms/2.9.0/eto.forms.2.9.0.nupkg.sha512",
     "/home/deck/.nuget/packages/eto.platform.gtk/2.9.0/eto.platform.gtk.2.9.0.nupkg.sha512",
     "/home/deck/.nuget/packages/gdksharp/3.24.24.95/gdksharp.3.24.24.95.nupkg.sha512",
     "/home/deck/.nuget/packages/giosharp/3.24.24.95/giosharp.3.24.24.95.nupkg.sha512",
     "/home/deck/.nuget/packages/glibsharp/3.24.24.95/glibsharp.3.24.24.95.nupkg.sha512",
     "/home/deck/.nuget/packages/gtksharp/3.24.24.95/gtksharp.3.24.24.95.nupkg.sha512",
+    "/home/deck/.nuget/packages/libclang/10.0.0/libclang.10.0.0.nupkg.sha512",
+    "/home/deck/.nuget/packages/libclangsharp/10.0.0-beta1/libclangsharp.10.0.0-beta1.nupkg.sha512",
+    "/home/deck/.nuget/packages/microsoft.bcl.hashcode/1.1.0/microsoft.bcl.hashcode.1.1.0.nupkg.sha512",
     "/home/deck/.nuget/packages/microsoft.codeanalysis.analyzers/3.11.0/microsoft.codeanalysis.analyzers.3.11.0.nupkg.sha512",
     "/home/deck/.nuget/packages/microsoft.codeanalysis.common/4.13.0/microsoft.codeanalysis.common.4.13.0.nupkg.sha512",
     "/home/deck/.nuget/packages/microsoft.codeanalysis.csharp/4.13.0/microsoft.codeanalysis.csharp.4.13.0.nupkg.sha512",
@@ -32,8 +37,8 @@
     "/home/deck/.nuget/packages/system.runtime.compilerservices.unsafe/6.0.0/system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
     "/home/deck/.nuget/packages/system.text.encoding.codepages/7.0.0/system.text.encoding.codepages.7.0.0.nupkg.sha512",
     "/home/deck/.nuget/packages/system.threading.tasks.extensions/4.5.4/system.threading.tasks.extensions.4.5.4.nupkg.sha512",
-    "/home/deck/.nuget/packages/microsoft.netcore.app.runtime.linux-x64/8.0.13/microsoft.netcore.app.runtime.linux-x64.8.0.13.nupkg.sha512",
-    "/home/deck/.nuget/packages/microsoft.aspnetcore.app.runtime.linux-x64/8.0.13/microsoft.aspnetcore.app.runtime.linux-x64.8.0.13.nupkg.sha512"
+    "/home/deck/.nuget/packages/microsoft.aspnetcore.app.runtime.linux-x64/8.0.13/microsoft.aspnetcore.app.runtime.linux-x64.8.0.13.nupkg.sha512",
+    "/home/deck/.nuget/packages/microsoft.netcore.app.runtime.linux-x64/8.0.13/microsoft.netcore.app.runtime.linux-x64.8.0.13.nupkg.sha512"
   ],
   "logs": []
 }

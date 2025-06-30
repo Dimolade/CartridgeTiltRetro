@@ -131,10 +131,10 @@ namespace CTR
             }
         }
 
-        public void InitProps(AssetType at,SceneObject Owner)
+        public void InitProps(AssetType at, SceneObject Owner)
         {
             initted = true;
-            Console.WriteLine("Props Length before initting: "+Props.Count);
+            Console.WriteLine("Props Length before initting: " + Props.Count);
             //Props = new List<ObjectPropertie>();
             /* if (created)
                 return;*/
@@ -168,32 +168,32 @@ namespace CTR
                 }
             }
 
-            TryAddOP(new ObjectPropertie(Owner.name, "Name", true, (input) => {Owner.name = (string)input; return 1;}));
-            TryAddOP(new ObjectPropertie(Owner.Namespace, "Namespace", true, (input) => {Owner.Namespace = (string)input; return 1;}));
-            TryAddOP(new ObjectPropertie(0, "Screen", true, (input) => {return 1;}));
-            TryAddOP(new ObjectPropertie(true, "Instant Load", true, (input) => {return 1;}));
+            TryAddOP(new ObjectPropertie(Owner.name, "Name", true, (input) => { Owner.name = (string)input; return 1; }));
+            TryAddOP(new ObjectPropertie(Owner.Namespace, "Namespace", true, (input) => { Owner.Namespace = (string)input; return 1; }));
+            TryAddOP(new ObjectPropertie(0, "Screen", true, (input) => { return 1; }));
+            TryAddOP(new ObjectPropertie(true, "Instant Load", true, (input) => { return 1; }));
             if (at == AssetType.Image)
             {
-                ObjectPropertie LoadOnShow = new ObjectPropertie(true, "Load on Show", true, (input) => {return 1;});
+                ObjectPropertie LoadOnShow = new ObjectPropertie(true, "Load on Show", true, (input) => { return 1; });
                 AddTransformProperties();
                 TryAddOP(LoadOnShow);
-                TryAddOP(new ObjectPropertie(true, "Display", true, (input) => {return 1;}));
-                TryAddOP(new ObjectPropertie(new Color(255,255,255,255,0), "Color", true, (input) => {return 1;}));
+                TryAddOP(new ObjectPropertie(true, "Display", true, (input) => { return 1; }));
+                TryAddOP(new ObjectPropertie(new Color(255, 255, 255, 255, 0), "Color", true, (input) => { return 1; }));
             }
             if (at == AssetType.Font || at == AssetType.ImageFont)
             {
-                ObjectPropertie LoadOnShow = new ObjectPropertie(true, "Load on Show", true, (input) => {return 1;});
+                ObjectPropertie LoadOnShow = new ObjectPropertie(true, "Load on Show", true, (input) => { return 1; });
                 AddTransformProperties();
                 TryAddOP(LoadOnShow);
-                TryAddOP(new ObjectPropertie(true, "Display", true, (input) => {return 1;}));
-                TryAddOP(new ObjectPropertie("Hello, World!", "Text", true, (input) => {return 1;}));
-                TryAddOP(new ObjectPropertie(new Color(255,255,255,255,0), "Color", true, (input) => {return 1;}));
+                TryAddOP(new ObjectPropertie(true, "Display", true, (input) => { return 1; }));
+                TryAddOP(new ObjectPropertie("Hello, World!", "Text", true, (input) => { return 1; }));
+                TryAddOP(new ObjectPropertie(new Color(255, 255, 255, 255, 0), "Color", true, (input) => { return 1; }));
             }
             if (at == AssetType.Sound)
             {
-                TryAddOP(new ObjectPropertie(false, "Play on Load", true, (input) => {return 1;}));
-                TryAddOP(new ObjectPropertie(100.00, "Volume", true, (input) => {return 1;}));
-                TryAddOP(new ObjectPropertie(1.00, "Pitch", true, (input) => {return 1;}));
+                TryAddOP(new ObjectPropertie(false, "Play on Load", true, (input) => { return 1; }));
+                TryAddOP(new ObjectPropertie(100.00, "Volume", true, (input) => { return 1; }));
+                TryAddOP(new ObjectPropertie(1.00, "Pitch", true, (input) => { return 1; }));
             }
         }
 
@@ -330,182 +330,6 @@ namespace CTR
 
             list.Insert(toIndex, item);
         }
-        public static string GenerateScrSceneDef()
-        {
-            string ch = "";
-            int i = 0;
-            ch += @"
-#ifndef SCRSCRIPTSCENE_H
-#define SCRSCRIPTSCENE_H
-
-#include <vector>
-
-            ";
-            foreach (SceneObject SO1 in currentScene)
-            {
-                if (SO1.assetType == AssetType.Script)
-                {
-                    ch += "#include \"../CMS/"+SO1.asset.name+".h\"\n";
-                }
-            }
-            string vectorsToAdd = "";
-            foreach (SceneObject SO in currentScene)
-            {
-                if (SO.assetType == AssetType.Script)
-                {
-                    string script = File.ReadAllText(SO.asset.path);
-                    string pattern = @".setvoid\s*""Start""\s*\(\s*\)";
-                    bool containsPattern = Regex.IsMatch(script, pattern);
-
-                    if (containsPattern)
-                    {
-                        string realName = SO.asset.name+"Ref"+i.ToString();
-                        string sn = SO.asset.name;
-
-                        ch += @$"
-class {sn}Class {{
-public:
-std::string name;
-std::string Namespace;
-{sn}* script;
-
-{sn}Class({sn}* scr, std::string n, std::string ns) :
-script(scr), name(n), Namespace(ns) {{}}
-}};";
-                        vectorsToAdd += "\n"+$"static std::vector<{sn}Class*> {sn}classes;";
-                    }
-                }
-            }
-            ch += "class SceneRefs {\n"+
-            "public:\n";
-            ch += vectorsToAdd;
-            ch += "\n};";
-            ch += "\n#endif";
-            return ch;
-        }
-        public static string GenerateRefDefs()
-        {
-            string ccpp = "";
-            ccpp = "#include \"ScrSceneDef.h\"";
-
-            string vectorsToAdd = "";
-            int i = 0;
-            foreach (SceneObject SO in currentScene)
-            {
-                if (SO.assetType == AssetType.Script)
-                {
-                    string script = File.ReadAllText(SO.asset.path);
-                    string pattern = @".setvoid\s*""Start""\s*\(\s*\)";
-                    bool containsPattern = Regex.IsMatch(script, pattern);
-
-                    if (containsPattern)
-                    {
-                        string sn = SO.asset.name;
-
-                        vectorsToAdd += "\n"+$"std::vector<{sn}Class*> {sn}classes;";
-                    }
-                }
-                i++;
-            }
-            ccpp += vectorsToAdd;
-            return ccpp;
-        }
-        public static string GenerateRefCpp()
-        {
-            string ccpp = "";
-            ccpp += @"
-#ifndef SCRIPTSCENE_H
-#define SCRIPTSCENE_H
-
-#include ""../../CTR/Classes.h""
-#include ""../../CTR/Enums.h""
-#include ""../../CTR/CTRScene.h""
-#include ""../../CTR/ScrSceneDef.h""
-
-class ScriptScene {
-public:
-            ";
-            int i = 0;
-            foreach (SceneObject SO in currentScene)
-            {
-                if (SO.assetType == AssetType.Script)
-                {
-                    string script = File.ReadAllText(SO.asset.path);
-                    string pattern = @".setvoid\s*""Start""\s*\(\s*\)";
-                    bool containsPattern = Regex.IsMatch(script, pattern);
-
-                    if (containsPattern)
-                    {
-                        string realName = SO.asset.name+"Ref"+i.ToString();
-                        string sn = SO.asset.name;
-                        //currentList += SO.asset.name+" "+realName+";\n";
-                        string toAdd = "";
-                        toAdd += "static "+sn+"*"+" Get"+sn+"(const std::string& name, const std::string& Namespace) {\n";
-                        toAdd += $@"
-for (auto* asset : SceneRefs::{sn}classes) {{
-        if (asset->name == name && asset->Namespace == Namespace) {{
-            return asset->script;
-        }}
-    }}
-    return nullptr;
-}}
-                        ";
-                        toAdd += "\n";
-                        ccpp += toAdd;
-                    }
-                }
-                i++;
-            }
-            ccpp += "\n};\n#endif";
-            return ccpp;
-        }
-        public static string GenerateStartList()
-        {
-            string currentList = "";
-            int i = 0;
-            foreach (SceneObject SO in currentScene)
-            {
-                if (SO.assetType == AssetType.Script)
-                {
-                    string script = File.ReadAllText(SO.asset.path);
-                    string pattern = @".setvoid\s*""Start""\s*\(\s*\)";
-                    bool containsPattern = Regex.IsMatch(script, pattern);
-
-                    if (containsPattern)
-                    {
-                        string realName = SO.asset.name+"Ref"+i.ToString();
-                        currentList += SO.asset.name+" "+realName+";\n";
-                        currentList += (realName+".Start();\n");
-                        string classInit = $"{SO.asset.name}Class(&{realName}, \"{SO.name}\", \"{SO.Namespace}\")";
-                        currentList += "SceneRefs::"+SO.asset.name+$"classes.push_back(new {classInit});\n";
-                    }
-                }
-                i++;
-            }
-            return currentList;
-        }
-        public static string GenerateUpdateList()
-        {
-            string currentList = "";
-            int i = 0;
-            foreach (SceneObject SO in currentScene)
-            {
-                if (SO.assetType == AssetType.Script)
-                {
-                    string script = File.ReadAllText(SO.asset.path);
-                    string pattern = @".setvoid\s*""Update""\s*\(\s*\)";
-                    bool containsPattern = Regex.IsMatch(script, pattern);
-
-                    if (containsPattern)
-                    {
-                        string realName = SO.asset.name+"Ref"+i.ToString();
-                        currentList += (realName+".Update();\n");
-                    }
-                }
-                i++;
-            }
-            return currentList;
-        }
         public static string GenerateIncludeList()
         {
             string cr = "";
@@ -513,7 +337,7 @@ for (auto* asset : SceneRefs::{sn}classes) {{
             {
                 if (so.assetType == AssetType.Script)
                 {
-                    cr += "#include \"CMS/"+so.asset.name+".h\"\n";
+                    cr += "#include \"CMS/"+so.asset.name+".hpp\"\n";
                 }
             }
             return cr;
@@ -521,9 +345,9 @@ for (auto* asset : SceneRefs::{sn}classes) {{
         public static string GenerateSceneObjectsCPP(string storageprefix, string imageExtension, string imageprefix, string soundprefix, string otherprefix, string defaultSoundType)
         {
             string currentc = "";
-            currentc += "std::vector<AssetProps*> AssetProps::assets;\nvoid CTRScene::InitScene() {\n";
-            currentc += $"AssetProps::assets.reserve({currentScene.Count});\n";
-            currentc += "AssetProps::assets = {\n";
+            currentc += "std::vector<GameAsset*> GameAssets;\nvoid CTRScene::InitScene() {\n";
+            currentc += $"GameAssets.reserve({currentScene.Count});\n";
+            currentc += "GameAssets = {\n";
             for (int i = 0; i < currentScene.Count; i++)
             {
                 SceneObject current = currentScene[i];
@@ -566,7 +390,7 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                 else if (currentScene[i].assetType == AssetType.Script)
                 {
                     bool instaload = (bool)current.OP.Props[3].currentValue;
-                    currentc += "new AssetProps(Enums::AssetType::Script, \""+current.asset.name+"\","+instaload.ToString().ToLower()+",\""+current.name+"\",\""+current.Namespace+"\","+
+                    currentc += "new GameAsset(Enums::AssetType::Script, \""+current.asset.name+"\","+instaload.ToString().ToLower()+",\""+current.name+"\",\""+current.Namespace+"\","+
                     Convert.ToInt32(current.OP.Props[2].currentValue)+
                     ")";
                 }
@@ -805,6 +629,11 @@ for (auto* asset : SceneRefs::{sn}classes) {{
         // Properties
         public StackLayout PropertyHolder;
         public StackLayout ObjectPropertiesContainer;
+        public Label con;
+        public void UpdateConsole()
+        {
+            con.Text = Builder.failList;
+        }
         public void RefreshProperties()
         {
             ObjectPropertiesContainer.Items.Clear();
@@ -845,20 +674,47 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                     CreateIntPropertie(OP);
                 }
             }
-            Button removeButton = new Button {Text = "Remove -"};
-            removeButton.Click += (sender,e) => {RemoveSceneObjectFromScene(SO);};
+            Button removeButton = new Button { Text = "Remove -" };
+            removeButton.Click += (sender, e) => { RemoveSceneObjectFromScene(SO); };
             ObjectPropertiesContainer.Items.Add(removeButton);
+            if (SO.assetType == AssetType.Script)
+            {
+                Label nl = new Label { Text = "Generated:\n", Style = "left-align" };
+                CMS.CMSV2ConversionResult res = CMS.CMSV2ToCpp.Convert(File.ReadAllText(SO.asset.path), CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
+                if (!res.failed)
+                {
+                    nl.Text += res.Cpp;
+                }
+                else
+                {
+                    res.whyFailed.Tokens = res.conversion.Tokens;
+                    nl.Text += "Failed!\n" + res.whyFailed.fullError();
+                }
+
+                var contentPanel = new Panel
+                {
+                    Content = nl
+                };
+
+                var scrollable = new Scrollable
+                {
+                    Content = contentPanel,
+                    ExpandContentWidth = true,
+                    ExpandContentHeight = true
+                };
+                ObjectPropertiesContainer.Items.Add(scrollable);
+            }
         }
         void CreateStringPropertie(ObjectPropertie OP)
         {
-            TextBox valueO = new TextBox() {Width = 400, Text = (string)OP.currentValue};
+            TextBox valueO = new TextBox() {Width = 400, Text = (string)OP.currentValue, Style = "right-align"};
             StackLayout input = new StackLayout
             {
                 Orientation = Orientation.Horizontal,
                 Spacing = 5,
                 Items =
                 {
-                    new Label {Text = OP.name},
+                    new Label {Text = OP.name, Style = "left-align"},
                     valueO
                 }
             };
@@ -869,7 +725,7 @@ for (auto* asset : SceneRefs::{sn}classes) {{
         }
         void CreateBoolPropertie(ObjectPropertie OP)
         {
-            CheckBox value = new CheckBox {Text = OP.name, Checked = (bool)OP.currentValue};
+            CheckBox value = new CheckBox {Text = OP.name, Checked = (bool)OP.currentValue, Style = "left-align"};
 
             value.CheckedChanged += (sender,e) => {OP.currentValue = value.Checked; OP.onUpdate?.Invoke(value.Checked); Console.WriteLine("CheckBox changed!");};
 
@@ -877,14 +733,14 @@ for (auto* asset : SceneRefs::{sn}classes) {{
         }
         void CreateDoublePropertie(ObjectPropertie OP)
         {
-            TextBox valueO = new TextBox() {Width = 400, Text = (string)OP.currentValue};
+            TextBox valueO = new TextBox() {Width = 400, Text = (string)OP.currentValue, Style = "right-align"};
             StackLayout input = new StackLayout
             {
                 Orientation = Orientation.Horizontal,
                 Spacing = 5,
                 Items =
                 {
-                    new Label {Text = OP.name},
+                    new Label {Text = OP.name, Style = "left-align"},
                     valueO
                 }
             };
@@ -902,14 +758,14 @@ for (auto* asset : SceneRefs::{sn}classes) {{
         }
         void CreateIntPropertie(ObjectPropertie OP)
         {
-            TextBox valueO = new TextBox() {Width = 400, Text = OP.currentValue.ToString()};
+            TextBox valueO = new TextBox() {Width = 400, Text = OP.currentValue.ToString(), Style = "right-align"};
             StackLayout input = new StackLayout
             {
                 Orientation = Orientation.Horizontal,
                 Spacing = 5,
                 Items =
                 {
-                    new Label {Text = OP.name},
+                    new Label {Text = OP.name, Style = "left-align"},
                     valueO
                 }
             };
@@ -929,9 +785,9 @@ for (auto* asset : SceneRefs::{sn}classes) {{
         {
             Vector3 currentVec = (Vector3)OP.currentValue;
 
-            TextBox xValue = new TextBox() { Width = 100, Text = currentVec.x.ToString() };
-            TextBox yValue = new TextBox() { Width = 100, Text = currentVec.y.ToString() };
-            TextBox zValue = new TextBox() { Width = 100, Text = currentVec.z.ToString() };
+            TextBox xValue = new TextBox() { Width = 100, Text = currentVec.x.ToString(), Style = "right-align" };
+            TextBox yValue = new TextBox() { Width = 100, Text = currentVec.y.ToString(), Style = "right-align" };
+            TextBox zValue = new TextBox() { Width = 100, Text = currentVec.z.ToString(), Style = "right-align" };
 
             StackLayout input = new StackLayout
             {
@@ -939,11 +795,11 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                 Spacing = 5,
                 Items =
                 {
-                    new Label {Text = OP.name + " (X)"},
+                    new Label {Text = OP.name + " (X)", Style = "left-align"},
                     xValue,
-                    new Label {Text = "(Y)"},
+                    new Label {Text = "(Y)", Style = "left-align"},
                     yValue,
-                    new Label {Text = "(Z)"},
+                    new Label {Text = "(Z)", Style = "left-align"},
                     zValue
                 }
             };
@@ -981,11 +837,11 @@ for (auto* asset : SceneRefs::{sn}classes) {{
         {
             Color currentColor = (Color)OP.currentValue;
 
-            TextBox rValue = new TextBox() { Width = 50, Text = (currentColor.r).ToString() };
-            TextBox gValue = new TextBox() { Width = 50, Text = (currentColor.g).ToString() };
-            TextBox bValue = new TextBox() { Width = 50, Text = (currentColor.b).ToString() };
-            TextBox aValue = new TextBox() { Width = 50, Text = (currentColor.a).ToString() };
-            TextBox blValue = new TextBox() { Width = 50, Text = (currentColor.blend).ToString() };
+            TextBox rValue = new TextBox() { Width = 50, Text = (currentColor.r).ToString(), Style = "right-align" };
+            TextBox gValue = new TextBox() { Width = 50, Text = (currentColor.g).ToString(), Style = "right-align" };
+            TextBox bValue = new TextBox() { Width = 50, Text = (currentColor.b).ToString(), Style = "right-align" };
+            TextBox aValue = new TextBox() { Width = 50, Text = (currentColor.a).ToString(), Style = "right-align" };
+            TextBox blValue = new TextBox() { Width = 50, Text = (currentColor.blend).ToString(), Style = "right-align" };
 
             StackLayout input = new StackLayout
             {
@@ -993,15 +849,15 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                 Spacing = 5,
                 Items =
                 {
-                    new Label {Text = OP.name + " (R)"},
+                    new Label {Text = OP.name + " (R)", Style = "left-align"},
                     rValue,
-                    new Label {Text = "(G)"},
+                    new Label {Text = "(G)", Style = "left-align"},
                     gValue,
-                    new Label {Text = "(B)"},
+                    new Label {Text = "(B)", Style = "left-align"},
                     bValue,
-                    new Label {Text = "(A)"},
+                    new Label {Text = "(A)", Style = "left-align"},
                     aValue,
-                    new Label {Text = "(Blend)"},
+                    new Label {Text = "(Blend)", Style = "left-align"},
                     blValue
                 }
             };
@@ -1139,8 +995,9 @@ for (auto* asset : SceneRefs::{sn}classes) {{
             EditorTools.currentScene.Add(new SceneObject(result.ass, result.inputBox.Text, result.namespaceBox.Text, (AssetType)result.TypeDropdown.SelectedIndex));
             RefreshHierarchy();
         }
-        public EditorWindow(CTR.Projects.Project p)
+        public EditorWindow(CTR.Projects.Project p, string ctrProjPath)
         {
+            CMSWatcher.editorWindow = this;
             Title = $"Cartridge Tilt Retro Editor ({CTR.Env.ctrVersion})";
             var screen = Screen.PrimaryScreen;
             var workingArea = screen.WorkingArea;
@@ -1148,7 +1005,29 @@ for (auto* asset : SceneRefs::{sn}classes) {{
             Resizable = false;
             this.Icon = new Icon("gfx/Icon.ico");
             int x = (int)workingArea.Width;
-            int y = (int)workingArea.Height-65;
+            int y = (int)workingArea.Height - 65;
+
+            if (!Directory.Exists(Path.Combine(p.path, "Assets/")))
+            {
+                MessageBox.Show("This Project file is corrupted, repairing.");
+                corrupted:
+                MessageBox.Show("Please select the Project directory.");
+                string dir = CTR.UIButtons.FolderSelect("Select Project Directory", this);
+                if (dir != null && dir != "")
+                {
+                    if (!Directory.Exists(Path.Combine(dir, "Assets/")))
+                    {
+                        MessageBox.Show("This Project isnt a Project, are you sure this Project is a Project for a CTREngine Project?");
+                        goto corrupted;
+                    }
+                    p.path = dir;
+                    p.ctrProjPath = ctrProjPath;
+                    File.WriteAllText(ctrProjPath, Newtonsoft.Json.JsonConvert.SerializeObject(p));
+                }
+            }
+
+            Styles.Add<Label>("left-align", l => l.TextAlignment = TextAlignment.Left);
+            Styles.Add<Label>("right-align", l => l.TextAlignment = TextAlignment.Right);
 
             buttonPanel = new StackLayout
             {
@@ -1164,7 +1043,7 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                 Orientation = Orientation.Vertical,
                 Spacing = 5,
                 Width = 600,
-                Height = y-30,
+                Height = y - 30,
                 HorizontalContentAlignment = HorizontalAlignment.Center
             };
 
@@ -1173,40 +1052,40 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                 Orientation = Orientation.Vertical,
                 Spacing = 5,
                 Width = 600,
-                Height = y-30,
-                HorizontalContentAlignment = HorizontalAlignment.Center
+                Height = y - 30,
+                HorizontalContentAlignment = HorizontalAlignment.Left
             };
 
-            PropertyHolder.Items.Add(new Label {Text = "Object Properties", Font = new Font(FontFamilies.Sans, 18, FontStyle.Bold)});
+            PropertyHolder.Items.Add(new Label { Text = "Object Properties", Font = new Font(FontFamilies.Sans, 18, FontStyle.Bold) });
             PropertyHolder.Items.Add(ObjectPropertiesContainer);
 
             // FileExplorer
 
-            FileExplorer = new GridLayout(3, 300, y-50, new Size(15, 15), new Padding(15)); // 3 columns
+            FileExplorer = new GridLayout(3, 300, y - 50, new Size(15, 15), new Padding(15)); // 3 columns
 
-            Label explorerTitle = new Label {Text = "Asset Explorer", Font = new Font(FontFamilies.Sans, 18, FontStyle.Bold)};
+            Label explorerTitle = new Label { Text = "Asset Explorer", Font = new Font(FontFamilies.Sans, 18, FontStyle.Bold) };
 
-            SortType = new DropDown 
-            { 
-                DataStore = Enum.GetNames(typeof(AssetSortType)), 
-                SelectedIndex = 0 
+            SortType = new DropDown
+            {
+                DataStore = Enum.GetNames(typeof(AssetSortType)),
+                SelectedIndex = 0
             };
 
-            SortType.SelectedIndexChanged += (sender, e) => 
+            SortType.SelectedIndexChanged += (sender, e) =>
             {
                 RefreshFileExplorer(p);
             };
 
             RefreshFileExplorer(p);
 
-            FileExplorer.MouseDown += (sender, e) => {RefreshFileExplorer(p);};
+            FileExplorer.MouseDown += (sender, e) => { RefreshFileExplorer(p); };
 
             FileExplorerParent = new StackLayout
             {
                 Orientation = Orientation.Vertical,
                 Spacing = 5,
                 Width = 300,
-                Height = y-30,
+                Height = y - 30,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
                 Items = {
                     new StackLayout
@@ -1229,23 +1108,23 @@ for (auto* asset : SceneRefs::{sn}classes) {{
             Hierarchy = new ListBox
             {
                 Width = 300,
-                Height = y-50
+                Height = y - 50
             };
 
             ListBoxUtils.MakeListBoxReorderable(Hierarchy);
             // Propertie
-            Hierarchy.SelectedIndexChanged += (sender,e) => {RefreshProperties();};
-            Hierarchy.MouseDown += (sender,e) => {RefreshProperties();};
-            EditorTools.currentScene.ListChanged += (sender,e) => {RefreshHierarchy();};
+            Hierarchy.SelectedIndexChanged += (sender, e) => { RefreshProperties(); };
+            Hierarchy.MouseDown += (sender, e) => { RefreshProperties(); };
+            EditorTools.currentScene.ListChanged += (sender, e) => { RefreshHierarchy(); };
             //Hierarchy
 
-            PlusHierarchyButton = new Button() {Text = "New +"};
+            PlusHierarchyButton = new Button() { Text = "New +" };
 
-            PlusHierarchyButton.Click += (sender,e ) => NewObjectVoid(p);
+            PlusHierarchyButton.Click += (sender, e) => NewObjectVoid(p);
 
-            RefreshHierarchyButton = new Button() {Text = "⟳", Size = new Size(12, 12)};
+            RefreshHierarchyButton = new Button() { Text = "⟳", Size = new Size(12, 12) };
 
-            RefreshHierarchyButton.Click += (sender,e ) => RefreshHierarchy();
+            RefreshHierarchyButton.Click += (sender, e) => RefreshHierarchy();
             //⟳
 
             HierarchyPanel = new StackLayout
@@ -1283,19 +1162,21 @@ for (auto* asset : SceneRefs::{sn}classes) {{
             var sceneMenu = new ButtonMenuItem { Text = "Scene" };
             var assetsMenu = new ButtonMenuItem { Text = "Assets" };
             var testMenu = new ButtonMenuItem { Text = "Edit" };
-            var cmsMenu = new ButtonMenuItem { Text = "CMS" };
+            //var cmsMenu = new ButtonMenuItem { Text = "CMS" };
 
-            fileMenu.Click += (sender, e) => {ShowButtons(new List<string> { "Build" }, this, p);};
-            sceneMenu.Click += (sender, e) => {ShowButtons(new List<string> { "Save Scene", "Load Scene", "Preview Scene" }, this, p);};
-            assetsMenu.Click += (sender, e) => {ShowButtons(new List<string> { "Open Asset Maker" }, this, p);};
-            testMenu.Click += (sender, e) => {ShowButtons(new List<string> { "Preferences", "Platform Manager" }, this, p);};
-            cmsMenu.Click += (sender, e) => {ShowButtons(new List<string> { "Open CMS IDE" }, this, p);};
+            fileMenu.Click += (sender, e) => { ShowButtons(new List<string> { "Build" }, this, p); };
+            sceneMenu.Click += (sender, e) => { ShowButtons(new List<string> { "Save Scene", "Load Scene", "Preview Scene" }, this, p); };
+            assetsMenu.Click += (sender, e) => { ShowButtons(new List<string> { "Open Asset Maker" }, this, p); };
+            testMenu.Click += (sender, e) => { ShowButtons(new List<string> { "Preferences", "Platform Manager" }, this, p); };
+            //cmsMenu.Click += (sender, e) => { ShowButtons(new List<string> { "Open CMS IDE" }, this, p); };
 
             menu.Items.Add(fileMenu);
             menu.Items.Add(sceneMenu);
             menu.Items.Add(assetsMenu);
             menu.Items.Add(testMenu);
-            menu.Items.Add(cmsMenu);
+            //menu.Items.Add(cmsMenu);
+
+            con = new Label { Text = "Console" };
 
 
             var layout = new StackLayout
@@ -1312,7 +1193,8 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                         {
                             HierarchyParent,
                             FileExplorerParent,
-                            PropertyHolder
+                            PropertyHolder,
+                            con
                         }
                     }
                 }
@@ -1321,6 +1203,7 @@ for (auto* asset : SceneRefs::{sn}classes) {{
             Content = layout;
 
             Menu = menu;
+            CMSWatcher.Setup(p);
         }
 
         private void HierarchyOnKeyDown(object sender, KeyEventArgs e)
@@ -1369,7 +1252,7 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                 buttonPanel.Items.Add(button);
             }
 
-            buttonPanel.Visible = true; // Make the button panel visible
+            buttonPanel.Visible = true; // Make the button panel Visible
             }
             else
             {
@@ -1379,89 +1262,14 @@ for (auto* asset : SceneRefs::{sn}classes) {{
 
         void Actions(string name, Panel callFrom, Project p)
         {
-            if (name == "Open CMS IDE")
-            {
-                CMS.CMSIDEWindow cmsIDE;
-                cmsIDE = new CMS.CMSIDEWindow();
-            
-                cmsIDE.Show();
-            }
-            else if (name == "Open Asset Maker")
+            if (name == "Open Asset Maker")
             {
                 AssetMaker AM = new AssetMaker();
                 AM.Show();
             }
             else if (name == "Build")
             {
-                SelectPlatformDialog SPL = new SelectPlatformDialog("Choose Platform to Build to:");
-                SPL.ShowModal(this);
-                if (SPL.choseYes)
-                {
-                    // Make Build Folder
-                    Platform p2 = CTR.FileManager.Platforms.GetPlatforms()[SPL.platform.SelectedIndex];
-                    string directory = Path.GetDirectoryName(Path.Combine(p.path,"Build/"));
-
-                    if (!Directory.Exists(directory))
-                    {
-                        Directory.CreateDirectory(directory);
-                    }
-
-                    foreach (string file in Directory.GetFiles(Path.Combine(p.path,"Build/")))
-                    {
-                        File.Delete(file);
-                    }
-
-                    // Delete all subdirectories
-                    foreach (string subDirectory in Directory.GetDirectories(Path.Combine(p.path,"Build/")))
-                    {
-                        if (Path.GetFileName(subDirectory) == "CTR")
-                        {
-                            continue;
-                        }
-                        Directory.Delete(subDirectory, true); // true: delete subdirectories recursively
-                    }
-
-                    string targetPath = Path.Combine(p.path,"Build/");
-                    File.WriteAllText(targetPath+"GeneratedSceneObjects.cpp", EditorTools.GenerateSceneObjectsCPP(
-                        (string)PlatformDLLLoader.GetValueFromDll(Path.Combine(p2.installPath, "MainAssembly.dll"),
-                        "assetStoragePath"
-                        ),(string)PlatformDLLLoader.GetValueFromDll(Path.Combine(p2.installPath, "MainAssembly.dll"),
-                        "defaultImageType"
-                        ),(string)PlatformDLLLoader.GetValueFromDll(Path.Combine(p2.installPath, "MainAssembly.dll"),
-                        "imagePrefix"
-                        ),(string)PlatformDLLLoader.GetValueFromDll(Path.Combine(p2.installPath, "MainAssembly.dll"),
-                        "soundPrefix"
-                        ),(string)PlatformDLLLoader.GetValueFromDll(Path.Combine(p2.installPath, "MainAssembly.dll"),
-                        "otherPrefix"
-                        ),(string)PlatformDLLLoader.GetValueFromDll(Path.Combine(p2.installPath, "MainAssembly.dll"),
-                        "defaultSoundType"
-                        )
-                    ));
-
-                    File.WriteAllText(targetPath+"GeneratedStarts.cpp", EditorTools.GenerateStartList());
-                    File.WriteAllText(targetPath+"GeneratedSceneRefs.h", EditorTools.GenerateScrSceneDef()); //GenerateRefDefs
-                    File.WriteAllText(targetPath+"GeneratedSceneRefs.cpp", EditorTools.GenerateRefDefs());
-                    File.WriteAllText(targetPath+"GeneratedSceneRefsCMS.h", EditorTools.GenerateRefCpp());
-                    File.WriteAllText(targetPath+"GeneratedUpdates.cpp", EditorTools.GenerateUpdateList());
-                    File.WriteAllText(targetPath+"GeneratedIncludes.cpp", EditorTools.GenerateIncludeList());
-                    foreach (SceneObject so in EditorTools.currentScene)
-                    {
-                        Asset a = so.asset;
-                        if (a.GetAssetType() == AssetType.Script)
-                        {
-                            CMS.ConvertResult convertResult = CMS.Cpp.ConvertToCpp(File.ReadAllText(a.path), a.name);
-                            File.WriteAllText(targetPath+a.name+".cpp", convertResult.OutputScript);
-                            File.WriteAllText(targetPath+a.name+".h", convertResult.GenerateHFile());
-                        }
-                    }
-                    //
-                    PlatformDLLLoader.CallBuildPlatform(
-                        Path.Combine(p2.installPath, "MainAssembly.dll"),
-                        p.ctrProjPath
-                    );
-
-                    Console.WriteLine("Ran with ctrproj file: "+FileManager.Paths.GetProjectFilePaths()[SPL.platform.SelectedIndex]);
-                }
+                Builder.Build(this, p);
                 //PlatformDLLLoader.CallBuildPlatform();
             }
             else if (name == "Save Scene")
@@ -1487,6 +1295,12 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                     RefreshHierarchy();
                 }
             }
+            else if (name == "Platform Manager")
+            {
+                CTR.PlatformManager.PMW = new PlatformManagerWindow();
+            
+                CTR.PlatformManager.PMW.Show();   
+            }
             else if (name == "Preview Scene")
             {
                 SelectPlatformDialog SPL = new SelectPlatformDialog("Choose Platform to Display Scene on:");
@@ -1502,7 +1316,7 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                     int i = 1;
                     foreach (int[] screen in screens)
                     {
-                        Screens.Add("Screen "+i+$" ({screen[0]+"x"+screen[1]})");
+                        Screens.Add("Screen " + i + $" ({screen[0] + "x" + screen[1]})");
                         i++;
                     }
 
@@ -1518,7 +1332,7 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                         {
                             if (Convert.ToInt32(SO.OP.Props[2].currentValue) != D.selectedIndex)
                                 continue;
-                            
+
                             if (SO.assetType == AssetType.Image)
                             {
                                 Image img = dp.LoadImage(SO.asset.path);
@@ -1526,7 +1340,7 @@ for (auto* asset : SceneRefs::{sn}classes) {{
                                 Vector3 r = (Vector3)SO.OP.Props[5].currentValue;
                                 Vector3 s = (Vector3)SO.OP.Props[6].currentValue;
                                 Color c = (Color)SO.OP.Props[9].currentValue;
-                                dp.DrawImage(img, (int)po.x, (int)po.y, c,s,r);
+                                dp.DrawImage(img, (int)po.x, (int)po.y, c, s, r);
                             }
                         }
                     }

@@ -2,6 +2,7 @@ using System.IO;
 using CTR.Projects;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using CTR.FileManager;
 
 namespace CTR.FileManager
 {
@@ -137,19 +138,19 @@ namespace CTR.FileManager
     public static class Projects
     {
         public static void WriteProject(Project project)
-		{
-			string path = Path.Combine(CTR.FileManager.Paths.GetCTRPath(), "projects/"+project.name+".ctrproj");
-			string directory = Path.GetDirectoryName(path);
+        {
+            string path = Path.Combine(CTR.FileManager.Paths.GetCTRPath(), "projects/" + project.name + ".ctrproj");
+            string directory = Path.GetDirectoryName(path);
 
-			if (!Directory.Exists(directory))
-			{
-				Directory.CreateDirectory(directory);
-			}
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
-			File.WriteAllText(path, JsonConvert.SerializeObject(project));
-			Console.WriteLine($"File written to: {path}");
+            File.WriteAllText(path, JsonConvert.SerializeObject(project));
+            Console.WriteLine($"File written to: {path}");
             CTR.Projects.Handler.HandleNewProject(project, path);
-		}
+        }
 
         public static List<Project> GetProjects()
         {
@@ -163,6 +164,37 @@ namespace CTR.FileManager
                 }
             }
             return plist;
+        }
+
+        public static void RemoveProject(string p)
+        {
+            string plistp = Path.Combine(Paths.GetCTRPath(), "projectlist.txt");
+            string[] lines = File.ReadAllText(plistp).Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+
+            List<string> projectsLists = new List<string>();
+            string newList = "";
+
+            string fullP = Path.GetFullPath(p).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            foreach (string l in lines)
+            {
+                if (!string.IsNullOrWhiteSpace(l))
+                {
+                    string fullL = Path.GetFullPath(l).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+                    bool samePath = string.Equals(fullP, fullL,
+                        Environment.OSVersion.Platform == PlatformID.Win32NT
+                            ? StringComparison.OrdinalIgnoreCase
+                            : StringComparison.Ordinal);
+
+                    if (!samePath)
+                    {
+                        newList += l + "\n";
+                    }
+                }
+            }
+
+            File.WriteAllText(plistp, newList);
         }
     }
 }

@@ -97,59 +97,51 @@ namespace CTR.Window
 
             WManager.ProjectsHolder = listBox;
 
-            // Dummy data for projects (Replace with actual logic)
             foreach (var project in CTR.FileManager.Projects.GetProjects())
             {
                 listBox.Items.Add(project.name);
             }
 
-            // ✅ Initialize buttonPanel before usage
             buttonPanel = new StackLayout
             {
                 Orientation = Orientation.Vertical,
                 HorizontalContentAlignment = HorizontalAlignment.Center,
                 VerticalContentAlignment = VerticalAlignment.Center,
                 Spacing = 20,
-                Visible = false // Initially hidden
+                Visible = false
             };
 
-            // Right-side panel with fixed width and height
             var rightPanel = new Panel
             {
-                Size = new Size(480, 1080), // Set width and height explicitly
+                Size = new Size(480, 1080),
                 Content = new StackLayout
                 {
                     Orientation = Orientation.Vertical,
                     HorizontalContentAlignment = HorizontalAlignment.Center,
                     VerticalContentAlignment = VerticalAlignment.Center,
-                    Items = { buttonPanel } // Now buttonPanel is initialized
+                    Items = { buttonPanel }
                 }
             };
 
-            // Main layout with horizontal split
             var layout = new StackLayout
             {
                 Orientation = Orientation.Horizontal,
                 Items =
                 {
-                    listBox,  // Left side - List
+                    listBox,
                     rightPanel
                 }
             };
 
-            // Menu bar with options
             var menu = new MenuBar();
             var fileMenu = new ButtonMenuItem { Text = "File" };
             var testMenu = new ButtonMenuItem { Text = "Edit" };
-            var cmsMenu = new ButtonMenuItem { Text = "CMS" };
 
             fileMenu.Click += (sender, e) => {ShowButtons(new List<string> { "New Project", "Add Project" }, this);};
             testMenu.Click += (sender, e) => {ShowButtons(new List<string> { "Preferences", "Platform Manager" }, this);};
-            cmsMenu.Click += (sender, e) => {ShowButtons(new List<string> { "Open CMS IDE" }, this);};
 
             menu.Items.Add(fileMenu);
             menu.Items.Add(testMenu);
-            menu.Items.Add(cmsMenu);
 
             listBox.MouseDown += (sender, e) => {
                 OnprojectSelected();
@@ -167,34 +159,67 @@ namespace CTR.Window
 
         void OnprojectSelected()
         {
+            if (listBox.SelectedIndex < 0 || listBox.SelectedIndex >= FileManager.Projects.GetProjects().Count)
+                return;
+            
             WManager.ProjectSelected = true; WManager.selectedProjectIndex = listBox.SelectedIndex; 
             ClearList();
             ShowLabel($"\"{FileManager.Projects.GetProjects()[listBox.SelectedIndex].name}\"", 30);
             ShowLabel($"CTR Version {FileManager.Projects.GetProjects()[listBox.SelectedIndex].ctrVersion}", 20);
             var button = new Button { Text = "Open Editor", Width = 240, Height = 100 };
 
-            button.Click += (sender, e) => CTR.Projects.Handler.OpenProjectEditor(CTR.FileManager.Projects.GetProjects()[listBox.SelectedIndex]);
+            button.Click += (sender, e) => CTR.Projects.Handler.OpenProjectEditor(
+            CTR.FileManager.Projects.GetProjects()[listBox.SelectedIndex],
+            CTR.FileManager.Paths.GetProjectFilePaths()[listBox.SelectedIndex]);
 
             buttonPanel.Items.Add(button);
+
+            Button removeButton = new Button { Text = "Remove -" };
+            removeButton.Click += (sender, e) =>
+            {
+                var projects = CTR.FileManager.Projects.GetProjects();
+                Console.WriteLine(projects.Count);
+                int selectedIndex = listBox.SelectedIndex;
+
+                if (selectedIndex >= 0 && selectedIndex < projects.Count)
+                {
+                    Console.WriteLine(projects[selectedIndex].ctrProjPath);
+                    CTR.FileManager.Projects.RemoveProject(projects[selectedIndex].ctrProjPath);
+                    Console.WriteLine("Removing Project!");
+                }
+
+                listBox.Items.Clear();
+                projects = CTR.FileManager.Projects.GetProjects();
+
+                foreach (var project in projects)
+                {
+                    listBox.Items.Add(project.name);
+                }
+
+                if (listBox.Items.Count > 0)
+                {
+                    listBox.SelectedIndex = 0;
+                }
+            };
+            buttonPanel.Items.Add(removeButton);
 
             buttonPanel.Visible = true;
         }
 
         private void ShowButtons(List<string> buttonLabels, Panel callFrom)
         {
-            buttonPanel.Items.Clear(); // Clear previous buttons
+            buttonPanel.Items.Clear();
             
             foreach (var label in buttonLabels)
             {
                 var button = new Button { Text = label, Width = 240, Height = 100 };
 
-                // Attach an event to handle the button click
                 button.Click += (sender, e) => ButtonClicked(label, callFrom);
 
                 buttonPanel.Items.Add(button);
             }
 
-            buttonPanel.Visible = true; // Show buttons when an option is selected
+            buttonPanel.Visible = true;
         }
 
         private void ButtonClicked(string buttonText, Panel callFrom)

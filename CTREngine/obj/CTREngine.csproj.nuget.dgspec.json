@@ -44,6 +44,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "CppAst": {
+              "target": "Package",
+              "version": "[0.8.0, )"
+            },
             "Eto.Forms": {
               "target": "Package",
               "version": "[2.9.0, )"

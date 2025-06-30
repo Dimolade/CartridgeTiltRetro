@@ -8,12 +8,14 @@ namespace CTR.Initialization
 	{
 		public static void Init()
 		{
-            CTR.FileManager.Paths.MakeProjectList();
+			CTR.FileManager.Paths.MakeProjectList();
 			CTR.PlatformManager.InitPlatforms();
 			CMS.Commands.Internal.RegisterCommands();
 			//SampleCSCMSFunc.Commence();
 			//CTR.Compiler.MakeDotnetProject("/home/deck/Documents/CTREngine/Engine/CartridgeTiltRetro/CTREngine/PlatformCompiled/", "platformCompiled").Build();
 			//CMS.Interpreter.InterpretCMS(File.ReadAllText("/home/deck/Documents/CTREngine/CMS/HumanMade.cms")).Run();
+			//CMS.CMSV2ConversionResult res = CMS.CMSV2ToCpp.Convert(File.ReadAllText("CMS/CMSToCpp/CMSV2.cms"), "/home/deck/CartridgeTiltRetro/N3DS/engine/source/");
+			//Console.WriteLine(res.SumUp());
 		}
 	}
 }

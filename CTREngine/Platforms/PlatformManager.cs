@@ -375,7 +375,7 @@ namespace CTR
                 buttonPanel.Items.Add(button);
             }
 
-            buttonPanel.Visible = true; // Make the button panel visible
+            buttonPanel.Visible = true; // Make the button panel Visible
             }
             else
             {

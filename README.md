@@ -50,6 +50,17 @@ You might have already noticed the space between every Token, this is intended a
 `);` <- Errors
 `) ;` <- Correct
 
+#### Function Parameters
+Parameters are structured like this:
+```csharp
+public void MyFunction ( parameter /* <- indicates parameters */ int /* <- type */ myInt /* <- name */ & /* <- Parameter seperator */ string myString )
+```
+
+And to call MyFunction:
+```csharp
+MyFunction ( 15 & "A String" ) ;
+```
+
 In Version 0.0.3, Batch Converting isnt supported yet, meaning that you cannot interact with other classes yet.
 ## Translation Files
 CMSV2 uses Translation Files to correctly Translate Things.
@@ -60,3 +71,8 @@ A Translation file is structured like this, comments are not supported and are t
 CTRImage* <- Type  Scene.CTRImage <- CMS Usage
 CTRImage* <- Type (doesnt matter) Scene::ConstCTRImage <- C++ Version
 ```
+
+Actual Translation File:
+```
+CTRImage* Scene.CTRImage
+CTRImage* Scene::ConstCTRImage ```

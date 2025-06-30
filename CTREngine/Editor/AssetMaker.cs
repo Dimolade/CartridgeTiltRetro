@@ -14,7 +14,7 @@ namespace CTR
         public string filePath;
         public int Width;
         public int Height;
-        
+
         public CTRIFChar(char c, string filePath)
         {
             this.c = c;
@@ -31,6 +31,12 @@ namespace CTR
             Chars = new List<CTRIFChar>();
         }
     }
+}
+
+enum CreateableAT
+{
+    ImageFont,
+    GameData
 }
 
 public class AssetMaker : Form
@@ -129,20 +135,48 @@ public class AssetMaker : Form
                         layout.Items[1] = content; // Replace old content
                 }
             }
+            else if (Path.GetExtension(SF) == ".ctrgd")
+                {
+                    CTRGDWindow ctrWindow = new CTRGDWindow(y);
+                    var content = ctrWindow.CreateContent(SelectFile);
+
+                    // Insert the content below the button panel
+                    if (Content is StackLayout layout)
+                    {
+                        if (layout.Items.Count == 1)
+                            layout.Items.Add(content); // Adds after button panel
+                        else
+                            layout.Items[1] = content; // Replace old content
+                    }
+                }
             // Open File
         }
         else if (name == "New Asset...")
         {
-            List<string> ns = Enum.GetNames(typeof(AssetType)).ToList();
+            List<string> ns = Enum.GetNames(typeof(CreateableAT)).ToList();
             DropdownDialog D = new DropdownDialog("New Asset...", ns);
             D.ShowModal(this);
 
             if (D.yes)
             {
-                AssetType AP = (AssetType)D.selectedIndex;
-                if (AP == AssetType.ImageFont)
+                CreateableAT AP = (CreateableAT)D.selectedIndex;
+                if (AP == CreateableAT.ImageFont)
                 {
                     CTRIFWindow ctrWindow = new CTRIFWindow(y);
+                    var content = ctrWindow.CreateContent(SelectFile);
+
+                    // Insert the content below the button panel
+                    if (Content is StackLayout layout)
+                    {
+                        if (layout.Items.Count == 1)
+                            layout.Items.Add(content); // Adds after button panel
+                        else
+                            layout.Items[1] = content; // Replace old content
+                    }
+                }
+                else if (AP == CreateableAT.GameData)
+                {
+                    CTRGDWindow ctrWindow = new CTRGDWindow(y);
                     var content = ctrWindow.CreateContent(SelectFile);
 
                     // Insert the content below the button panel
@@ -186,7 +220,7 @@ public class CTRIFWindow
     {
         y = availableHeight;
     }
-    
+
     public IIndirectBinding<Image> CreateImageBinding(int x = 32, int y = 32)
     {
         return Binding.Delegate<ListItem, Image>(item =>
@@ -464,6 +498,146 @@ public class CTRIFWindow
         {
             currentIF = JsonConvert.DeserializeObject<CTRIF>(File.ReadAllText(filePath));
             RefreshList();
+        }
+
+        return layout;
+    }
+}
+
+public class CTRGD
+{
+    public string Name;
+    public string Author;
+    public string Description;
+    public string Version;
+    public string IconPath;
+}
+
+public class CTRGDWindow
+{
+    private int y;
+    private StackLayout layout;
+
+    public CTRGDWindow(int availableHeight)
+    {
+        y = availableHeight;
+    }
+
+    public StackLayout CreateContent(Func<string> selectFileCallback, string filePath = null)
+    {
+        var currentGD = new CTRGD();
+        var SaveButton = new Button { Text = "Save CTR Game Data as File..." };
+        var l1 = new Label { Text = "Name" };
+        var l5 = new Label { Text = "Author" };
+        var l2 = new Label { Text = "Description" };
+        var l3 = new Label { Text = "Version" };
+        var l4 = new Label { Text = "Icon" };
+        var t1 = new TextBox { Width = 450 };
+        var t2 = new TextArea { Height = 500, Width = 450, ReadOnly = false, Wrap = true };
+        var t3 = new TextBox { Width = 450, Text = "0.0.1" };
+        var t4 = new TextBox { Width = 450, Text = "Assets/Icon.png" };
+        var t5 = new TextBox { Width = 450, Text = "" };
+        SaveButton.Click += (sender, e) =>
+        {
+            currentGD.Name = t1.Text;
+            currentGD.Author = t5.Text;
+            currentGD.Description = t2.Text;
+            currentGD.Version = t3.Text;
+            currentGD.IconPath = t4.Text;
+            string path = GetSaveFilePath(
+            "Save CTR Game Data",
+            new[] { "CTRGD File|ctrgd" }
+            );
+
+            if (path != null)
+            {
+                File.WriteAllText(path, JsonConvert.SerializeObject(currentGD));
+            }
+        };
+
+        void RefreshAll()
+        {
+            t1.Text = currentGD.Name;
+            t5.Text = currentGD.Author;
+            t2.Text = currentGD.Description;
+            t3.Text = currentGD.Version;
+            t4.Text = currentGD.IconPath;
+        }
+
+        string GetSaveFilePath(string title = "Save File", string[] filters = null)
+        {
+            var dialog = new SaveFileDialog
+            {
+                Title = title
+            };
+
+            if (filters != null)
+            {
+                foreach (var filter in filters)
+                {
+                    var parts = filter.Split('|');
+                    if (parts.Length == 2)
+                    {
+                        var f = new FileDialogFilter
+                        {
+                            Name = parts[0],
+                            Extensions = new[] { parts[1] } // This avoids calling Add
+                        };
+                        dialog.Filters.Add(f);
+                    }
+                }
+            }
+            else
+            {
+                dialog.Filters.Add(new FileDialogFilter
+                {
+                    Name = "All Files",
+                    Extensions = new[] { "*" }
+                });
+            }
+
+            var result = dialog.ShowDialog(null);
+            return result == DialogResult.Ok ? dialog.FileName : null;
+        }
+
+        StackLayout QSL(Control l, Control r)
+        {
+            return new StackLayout
+            {
+                Orientation = Orientation.Horizontal,
+                Items = {
+                    l,r
+                }
+            };
+        }
+
+        layout = new StackLayout
+        {
+            Orientation = Orientation.Vertical,
+            Spacing = 10,
+            Items =
+            {
+                new StackLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 10,
+                    Items =
+                    {
+                        new StackLayout
+                        {
+                            Orientation = Orientation.Vertical,
+                            Spacing = 10,
+                            Items = { QSL(l1, t1), QSL(l5,t5), QSL(l2,t2),QSL(l3,t3),QSL(l4,t4),new Label {Text = "Remember, CTRGD's should be named GameData.ctrgd and be in Project/Assets/"}, SaveButton }
+                        }
+                    }
+                }
+            }
+        };
+
+        if (filePath != null)
+        {
+            currentGD = JsonConvert.DeserializeObject<CTRGD>(File.ReadAllText(filePath));
+            RefreshAll();
         }
 
         return layout;

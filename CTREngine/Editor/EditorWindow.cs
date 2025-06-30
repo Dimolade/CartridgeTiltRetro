@@ -930,11 +930,14 @@ namespace CTR
                 {
                     return "gfx/FontIcon.png";
                 }
+                if (a.extension == "ctrgd")
+                {
+                    return "gfx/Binary.png";
+                }
                 if (a.extension == "wav" || a.extension == "mp3" || a.extension == "ogg")
                 {
                     return "gfx/SoundIcon.png";
                 }
-
             return "gfx/Text.png";
         }
         public Bitmap GetPreviewForAsset(Asset a)

@@ -409,13 +409,22 @@ namespace CMS
                 {
                     return TryTranslate(thisToken);
                 }
-                else if (thisToken.StartsWith(var.name+"."))
+                else if (thisToken.StartsWith(var.name + ".") && Tokens[currentIndex + 1] != "(")
                 {
                     string acc = "";
                     if (fixAccess(var, thisToken, out acc))
                     {
                         Tokens[currentIndex] = acc;
                         return TryTranslate(acc);
+                    }
+                }
+                else if (thisToken.StartsWith(var.name + ".") && Tokens[currentIndex + 1] == "(")
+                {
+                    string acc = "";
+                    if (fixAccess(var, thisToken, out acc))
+                    {
+                        Tokens[currentIndex] = acc;
+                        return handleFunctionOption(false,false);
                     }
                 }
             }

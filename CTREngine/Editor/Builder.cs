@@ -39,11 +39,13 @@ public static class CMSWatcher
     {
         bool returnFalse = false;
         Builder.failList = "";
+        List<string> tc = new List<string>();
+        List<string> anames = new List<string>();
         foreach (SceneObject a in EditorTools.currentScene)
         {
             if (a.assetType == AssetType.Script)
             {
-                CMS.CMSV2ConversionResult res = CMS.CMSV2ToCpp.Convert(File.ReadAllText(a.asset.path), CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
+                /*CMS.CMSV2ConversionResult res = CMS.CMSV2ToCpp.Convert(File.ReadAllText(a.asset.path), CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
                 if (res.failed)
                 {
                     Builder.canBuild = false;
@@ -55,8 +57,28 @@ public static class CMSWatcher
                 else
                 {
                     Builder.failList += a.name + " : " + "Success!\n";
-                }
+                }*/ // Non Batching ^^
+                tc.Add(File.ReadAllText(a.asset.path));
+                anames.Add(a.name);
             }
+        }
+        CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
+        int i = 0;
+        foreach (CMSV2ConversionResult res in br.CMSV2CR)
+        {
+            if (res.failed)
+            {
+                Builder.canBuild = false;
+                returnFalse = true;
+                res.whyFailed.Tokens = res.conversion.Tokens;
+                Builder.failList += anames[i] + " : " + res.whyFailed.fullError() + "\n";
+                Console.WriteLine("Failed converting!");
+            }
+            else
+            {
+                Builder.failList += anames[i] + " : " + "Success!\n";
+            }
+            i++;
         }
         Builder.canBuild = !returnFalse;
         editorWindow.UpdateConsole();
@@ -153,7 +175,7 @@ public static class Builder
                 "sourceDirectory"
                 );
 
-            List<CMSV2ConversionResult> ress = new List<CMSV2ConversionResult>();
+            /*List<CMSV2ConversionResult> ress = new List<CMSV2ConversionResult>();
             List<SceneObject> sos = new List<SceneObject>();
             foreach (SceneObject so in EditorTools.currentScene)
             {
@@ -165,9 +187,24 @@ public static class Builder
                     ress.Add(res);
                     sos.Add(so);
                 }
-            }
+            }*/ // non batch
 
-            GenerateEntryPoints(p, ress, sos);
+            List<string> tc = new List<string>();
+            List<string> anames = new List<string>();
+            List<SceneObject> so = new List<SceneObject>();
+            foreach (SceneObject a in EditorTools.currentScene)
+            {
+                if (a.assetType == AssetType.Script)
+                {
+                    tc.Add(File.ReadAllText(a.asset.path));
+                    anames.Add(a.name);
+                    so.Add(a);
+                }
+            }
+            CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
+            int i = 0;
+
+            GenerateEntryPoints(p, br.CMSV2CR, so);
             
             //
             PlatformDLLLoader.CallBuildPlatform(

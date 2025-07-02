@@ -3,6 +3,7 @@ using Eto.Drawing;
 using System.Collections;
 using System.Collections.Generic;
 using CTR;
+using CTR.FileManager;
 
 namespace CTR
 {
@@ -202,7 +203,7 @@ namespace CTR
                     var path = item?.Key;
                     if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
                     {
-                        using (var original = new Bitmap(path))
+                        using (var original = new Bitmap(Paths.GetPlatformCompatiblePath(path)))
                         {
                             // Resize to 32x32 in RAM
                             var resized = new Bitmap(original, x, y);

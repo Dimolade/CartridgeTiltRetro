@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using System.ComponentModel;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
+using CMS;
 
 namespace CTR
 {
@@ -560,7 +561,6 @@ namespace CTR
         public NewObjectDialog(string title, Project p)
         {
             Title = title;
-            ClientSize = new Size(300, 200);
 
             List<string> names = new List<string>();
 
@@ -680,7 +680,29 @@ namespace CTR
             if (SO.assetType == AssetType.Script)
             {
                 Label nl = new Label { Text = "Generated:\n", Style = "left-align" };
-                CMS.CMSV2ConversionResult res = CMS.CMSV2ToCpp.Convert(File.ReadAllText(SO.asset.path), CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
+                List<string> tc = new List<string>();
+                List<SceneObject> so = new List<SceneObject>();
+                foreach (SceneObject a in EditorTools.currentScene)
+                {
+                    if (a.assetType == AssetType.Script)
+                    {
+                        tc.Add(File.ReadAllText(a.asset.path));
+                        so.Add(a);
+                    }
+                }
+                CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
+                CMSV2ConversionResult res = null;
+
+                for (int i = 0; i < br.CMSV2CR.Count; i++)
+                {
+                    Console.WriteLine(so[i].asset.path + ", " + SO.asset.path);
+                    if (so[i].asset.path == SO.asset.path)
+                    {
+                        res = br.CMSV2CR[i];
+                        break;
+                    }
+                }
+
                 if (!res.failed)
                 {
                     nl.Text += res.Cpp;
@@ -897,9 +919,10 @@ namespace CTR
             {
                 try
                 {
-                    var path = item?.Key;
+                    var path = (item?.Key);
                     if (!string.IsNullOrEmpty(path) && System.IO.File.Exists(path))
                     {
+                        path = FileManager.Paths.GetPlatformCompatiblePath(path);
                         using (var original = new Bitmap(path))
                         {
                             // Resize to 32x32 in RAM
@@ -920,25 +943,25 @@ namespace CTR
         {
             if (a.extension == "png" || a.extension == "jpg" || a.extension == "bmp")
                 {
-                    return a.path;
+                    return FileManager.Paths.GetPlatformCompatiblePath(a.path);
                 }
                 if (a.extension == "cms")
                 {
-                    return "gfx/CMS.png";
+                    return FileManager.Paths.GetPlatformCompatiblePath("gfx/CMS.png");
                 }
                 if (a.extension == "ttf" || a.extension == "ctrif")
                 {
-                    return "gfx/FontIcon.png";
+                    return FileManager.Paths.GetPlatformCompatiblePath("gfx/FontIcon.png");
                 }
                 if (a.extension == "ctrgd")
                 {
-                    return "gfx/Binary.png";
+                    return FileManager.Paths.GetPlatformCompatiblePath("gfx/Binary.png");
                 }
                 if (a.extension == "wav" || a.extension == "mp3" || a.extension == "ogg")
                 {
-                    return "gfx/SoundIcon.png";
+                    return FileManager.Paths.GetPlatformCompatiblePath("gfx/SoundIcon.png");
                 }
-            return "gfx/Text.png";
+            return FileManager.Paths.GetPlatformCompatiblePath("gfx/Text.png");
         }
         public Bitmap GetPreviewForAsset(Asset a)
         {
@@ -1004,8 +1027,8 @@ namespace CTR
             Title = $"Cartridge Tilt Retro Editor ({CTR.Env.ctrVersion})";
             var screen = Screen.PrimaryScreen;
             var workingArea = screen.WorkingArea;
-            ClientSize = new Size((int)workingArea.Width, (int)workingArea.Height);
-            Resizable = false;
+            //ClientSize = new Size((int)workingArea.Width, (int)workingArea.Height);
+            Resizable = true;
             this.Icon = new Icon("gfx/Icon.ico");
             int x = (int)workingArea.Width;
             int y = (int)workingArea.Height - 65;

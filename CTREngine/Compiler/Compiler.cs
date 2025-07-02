@@ -16,15 +16,10 @@ namespace CTR
             Path = path;
             Name = name;
 
-            // Ensure the directory exists
-            if (!Directory.Exists(path))
+            // Create the basic .NET console project
+            if ((!Directory.Exists(Path) || !Directory.Exists(Path)) && Directory.Exists(System.IO.Directory.GetParent(path).FullName))
             {
                 Directory.CreateDirectory(path);
-            }
-
-            // Create the basic .NET console project
-            if (!Directory.Exists(Path))
-            {
                 CreateProject();
             }
         }

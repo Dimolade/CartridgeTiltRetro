@@ -29,6 +29,10 @@ namespace CTR.Initialization
 void MyNamespace::DoAnything
 int MyNamespace.MyInt
 int MyNamespace::MyInt
+vector<GameAsset*> Scene.GameAssets
+vector<GameAsset*> GameAssets
+GameAsset* CTRENGINEEXTRADONTUSE
+GameAsset* CTRENGINEEXTRADONTUSE
 CTRImage* Scene.GetCTRImage
 CTRImage* Scene::GetCTRImage
 CTRSound* Scene.GetCTRSound
@@ -68,13 +72,15 @@ string Log::Get
 string Log.GetLocation
 string Log::GetLocation
 string Game.Name
-string Game::Name
+string CTRGame::Name
 string Game.Author
-string Game::Author
+string CTRGame::Author
 string Game.Description
-string Game::Description
+string CTRGame::Description
 string Game.Version
-string Game::Version";
+string CTRGame::Version
+ScreenInfo Platform.GetScreen
+ScreenInfo Platform::GetScreen";
 		public static void Init()
 		{
 			string path = Path.Combine(Paths.GetCTRPath(), "DefaultBuild/");
@@ -82,7 +88,7 @@ string Game::Version";
 			{
 				Directory.CreateDirectory(path);
 			}
-			File.WriteAllText(Path.Combine(path, "TRANSLATION.cmsv2t"), DefaultTranslator);
+			File.WriteAllText(Path.Combine(path, "TRANSLATOR.cmsv2t"), DefaultTranslator);
 		}
 	}
 }

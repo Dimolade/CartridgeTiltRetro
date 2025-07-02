@@ -1,4 +1,6 @@
 using System.IO;
+using System;
+using System.Runtime.InteropServices;
 using CTR.Projects;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -9,14 +11,30 @@ namespace CTR.FileManager
 {
     public static class Paths
     {
+        public static string GetPlatformCompatiblePath(string path)
+        {
+            if (path.StartsWith("file"))
+            {
+                return path;
+            }
+
+            path = Path.GetFullPath(path);
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return new Uri(path).AbsoluteUri;
+            }
+
+            return path;
+        }
         public static string GetCTRPath()
         {
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "CartridgeTiltRetro/");
         }
         public static List<string> GetProjectFilePaths()
         {
-            string plistp = Path.Combine(GetCTRPath()+"projectlist.txt");
-            string[] lines = File.ReadAllText(plistp).Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            string plistp = Path.Combine(GetCTRPath(),"projectlist.txt");
+            string[] lines = File.ReadAllLines(plistp);
             List<string> projectsLists = new List<string>();
             foreach (string l in lines)
             {
@@ -29,8 +47,8 @@ namespace CTR.FileManager
         }
         public static List<string> GetPlatformFilePaths()
         {
-            string plistp = Path.Combine(GetCTRPath()+"platformlist.txt");
-            string[] lines = File.ReadAllText(plistp).Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            string plistp = Path.Combine(GetCTRPath(),"platformlist.txt");
+            string[] lines = File.ReadAllLines(plistp);
             foreach (string l in lines)
             {
                 Console.WriteLine(l);
@@ -40,7 +58,7 @@ namespace CTR.FileManager
         }
         public static void AddProject(string path)
         {
-            string plistp = Path.Combine(GetCTRPath()+"projectlist.txt");
+            string plistp = Path.Combine(GetCTRPath(),"projectlist.txt");
             string contents = File.ReadAllText(plistp);
             contents += "\n"+path;
             File.WriteAllText(plistp, contents);
@@ -48,11 +66,13 @@ namespace CTR.FileManager
         }
         public static void AddPlatform(string path, Form f)
         {
-            string plistp = Path.Combine(GetCTRPath() + "platformlist.txt");
+            string plistp = Path.Combine(GetCTRPath(), "platformlist.txt");
             string contents = File.ReadAllText(plistp);
             contents += "\n" + path;
             File.WriteAllText(plistp, contents);
             CTR.Platform p = JsonConvert.DeserializeObject<CTR.Platform>(File.ReadAllText(path));
+            Console.WriteLine("Install Path: " + p.installPath);
+            Console.WriteLine("Exists? " + Directory.Exists(p.installPath));
             if (!Directory.Exists(p.installPath))
             {
                 MessageBox.Show("This Platform file is corrupted, repairing.");
@@ -74,7 +94,7 @@ namespace CTR.FileManager
         }
         public static void MakeProjectList()
         {
-            string plistp = Path.Combine(GetCTRPath()+"projectlist.txt");
+            string plistp = Path.Combine(GetCTRPath(),"projectlist.txt");
             string path = Path.Combine(CTR.FileManager.Paths.GetCTRPath(), "projectlist.txt");
 			string directory = Path.GetDirectoryName(path);
 
@@ -90,7 +110,7 @@ namespace CTR.FileManager
         }
         public static void MakePlatformsList()
         {
-            string plistp = Path.Combine(GetCTRPath()+"platformlist.txt");
+            string plistp = Path.Combine(GetCTRPath(),"platformlist.txt");
             string path = Path.Combine(CTR.FileManager.Paths.GetCTRPath(), "platformlist.txt");
 			string directory = Path.GetDirectoryName(path);
 
@@ -160,7 +180,7 @@ namespace CTR.FileManager
             p = Path.Combine(p+"/", folderName + ".ctrplat");
             Console.WriteLine(p);
             string plistp = Path.Combine(Paths.GetCTRPath(), "platformlist.txt");
-            string[] lines = File.ReadAllText(plistp).Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            string[] lines = File.ReadAllLines(plistp);
 
             List<string> projectsLists = new List<string>();
             string newList = "";
@@ -213,7 +233,7 @@ namespace CTR.FileManager
         public static void RemoveProject(string p)
         {
             string plistp = Path.Combine(Paths.GetCTRPath(), "projectlist.txt");
-            string[] lines = File.ReadAllText(plistp).Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            string[] lines = File.ReadAllLines(plistp);
 
             List<string> projectsLists = new List<string>();
             string newList = "";

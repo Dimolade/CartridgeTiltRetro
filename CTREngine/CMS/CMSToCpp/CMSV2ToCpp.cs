@@ -106,12 +106,46 @@ namespace CMS
         }
     }
 
+    public class CMSV2BatchCR
+    {
+        public List<CMSV2ConversionResult> CMSV2CR = new List<CMSV2ConversionResult>();
+        List<string> converts = new List<string>();
+
+        public void StartJob(string buildDir)
+        {
+            CMSV2Conversion lcc = null;
+            foreach (string c in converts)
+            {
+                CMSV2Conversion cc = new CMSV2Conversion(c);
+                if (lcc != null)
+                {
+                    cc.globalVar = lcc.globalVar;
+                    cc.currentCEC = lcc.currentCEC;
+                }
+                CMSV2CR.Add(cc.StartJob(buildDir));
+                lcc = cc;
+            }
+        }
+
+        public CMSV2BatchCR(List<string> tc)
+        {
+            converts = tc;
+        }
+    }
+
     public static class CMSV2ToCpp
     {
         public static CMSV2ConversionResult Convert(string toConvert, string buildDir)
         {
             CMSV2Conversion cc = new CMSV2Conversion(toConvert);
             return cc.StartJob(buildDir);
+        }
+
+        public static CMSV2BatchCR ConvertBatch(List<string> toConvert, string buildDir)
+        {
+            CMSV2BatchCR cc = new CMSV2BatchCR(toConvert);
+            cc.StartJob(buildDir);
+            return cc;
         }
     }
 
@@ -178,15 +212,19 @@ namespace CMS
         bool cancel = false;
         ErrorReason curError;
         List<TokenAdditives> currentAdds;
-        List<CMSV2Var> currentClassVar = new List<CMSV2Var>();
-        List<CMSV2Var> currentClassFunc = new List<CMSV2Var>();
+        public List<CMSV2Var> currentClassVar = new List<CMSV2Var>();
+        public List<CMSV2Var> currentLocalVar = new List<CMSV2Var>();
+        public List<CMSV2Var> globalVar = new List<CMSV2Var>();
+        public List<CMSV2Var> currentClassFunc = new List<CMSV2Var>();
         CMSV2ConversionResult result;
         CMSV2Class currentClass;
-        CppExpressionConverter currentCEC;
+        public CppExpressionConverter currentCEC;
         int bodiesToClose = 0;
         bool inClass = false;
         bool inComment = false;
+        bool inFunction;
         string addBeforeVariable = "";
+
         public CMSV2ConversionResult StartJob(string buildDir)
         {
             Tokens = CMSV2Tokenizer.Tokenize(cmsv2Script);
@@ -337,6 +375,46 @@ namespace CMS
                                 }
                             }
                         }
+                        foreach (CMSV2Var var in globalVar)
+                        {
+                            if (thisToken == var.name)
+                            {
+                                canc = false;
+                                handleVariableOption();
+                                break;
+                            }
+                            else if (thisToken.StartsWith(var.name+"."))
+                            {
+                                string acc = "";
+                                if (fixAccess(var, thisToken, out acc))
+                                {
+                                    canc = false;
+                                    Tokens[currentIndex] = acc;
+                                    handleVariableOption();
+                                    break;
+                                }
+                            }
+                        }
+                        foreach (CMSV2Var var in currentLocalVar)
+                        {
+                            if (thisToken == var.name)
+                            {
+                                canc = false;
+                                handleVariableOption();
+                                break;
+                            }
+                            else if (thisToken.StartsWith(var.name + "."))
+                            {
+                                string acc = "";
+                                if (fixAccess(var, thisToken, out acc))
+                                {
+                                    canc = false;
+                                    Tokens[currentIndex] = acc;
+                                    handleVariableOption();
+                                    break;
+                                }
+                            }
+                        }
                         foreach (CMSV2Var var in currentClassFunc)
                         {
                             if (thisToken == var.name)
@@ -344,7 +422,8 @@ namespace CMS
                                 canc = false;
                                 handleFunctionOption();
                                 break;
-                            } else if (thisToken.StartsWith(var.name+"."))
+                            }
+                            else if (thisToken.StartsWith(var.name + "."))
                             {
                                 string acc = "";
                                 if (fixAccess(var, thisToken, out acc))
@@ -389,7 +468,7 @@ namespace CMS
         {
             string thisToken = usage;
             string toReplace = ".";
-            string replacement = var.returnType.EndsWith("*") ? "->" : ".";
+            string replacement = (var.name == var.returnType) ? ("::") : (var.returnType.EndsWith("*") ? "->" : ".");
 
             int index = thisToken.IndexOf(toReplace);
             if (index >= 0)
@@ -425,6 +504,56 @@ namespace CMS
                     {
                         Tokens[currentIndex] = acc;
                         return handleFunctionOption(false,false);
+                    }
+                }
+            }
+            foreach (CMSV2Var var in globalVar)
+            {
+                if (thisToken == var.name)
+                {
+                    return TryTranslate(thisToken);
+                }
+                else if (thisToken.StartsWith(var.name + ".") && Tokens[currentIndex + 1] != "(")
+                {
+                    string acc = "";
+                    if (fixAccess(var, thisToken, out acc))
+                    {
+                        Tokens[currentIndex] = acc;
+                        return TryTranslate(acc);
+                    }
+                }
+                else if (thisToken.StartsWith(var.name + ".") && Tokens[currentIndex + 1] == "(")
+                {
+                    string acc = "";
+                    if (fixAccess(var, thisToken, out acc))
+                    {
+                        Tokens[currentIndex] = acc;
+                        return handleFunctionOption(false,false);
+                    }
+                }
+            }
+            foreach (CMSV2Var var in currentLocalVar)
+            {
+                if (thisToken == var.name)
+                {
+                    return TryTranslate(thisToken);
+                }
+                else if (thisToken.StartsWith(var.name + ".") && Tokens[currentIndex + 1] != "(")
+                {
+                    string acc = "";
+                    if (fixAccess(var, thisToken, out acc))
+                    {
+                        Tokens[currentIndex] = acc;
+                        return TryTranslate(acc);
+                    }
+                }
+                else if (thisToken.StartsWith(var.name + ".") && Tokens[currentIndex + 1] == "(")
+                {
+                    string acc = "";
+                    if (fixAccess(var, thisToken, out acc))
+                    {
+                        Tokens[currentIndex] = acc;
+                        return handleFunctionOption(false, false);
                     }
                 }
             }
@@ -521,6 +650,11 @@ namespace CMS
             CMSV2Class cl = new CMSV2Class(name, new List<string>() {});
             cl.name = name;
             result.classes.Add(cl);
+            currentCEC.validReturnType.Add(name);
+            Console.WriteLine("Made Class");
+            currentClassVar.Add(new CMSV2Var(name, name));
+            globalVar.Add(new CMSV2Var(name, name));
+            currentClassFunc.Add(new CMSV2Var(name, name));
             currentAdds.Clear();
             HandleInheritants(cl);
             if (cancel)
@@ -744,13 +878,20 @@ namespace CMS
             currentIndex++;
             isFunc = getCurrentToken() == "(";
 
-            currentCpp += (addBeforeVariable != "" ? addBeforeVariable + " " : "") + (isFunc ? "inline " : "") + returnType;
+            currentCpp += ((addBeforeVariable != "" && !inFunction) ? addBeforeVariable + " " : "") + (isFunc ? "inline " : "") + returnType;
             currentCpp += " " + varName;
             Console.WriteLine("Created \"" + varName + "\" of Type \"" + returnType + "\"");
             if (!isFunc)
             {
                 handleVariable();
-                currentClassVar.Add(new CMSV2Var(varName, returnType));
+                if (!inFunction)
+                {
+                    currentClassVar.Add(new CMSV2Var(varName, returnType));
+                }
+                else
+                {
+                    currentLocalVar.Add(new CMSV2Var(varName, returnType));
+                }
             }
             else
             {
@@ -804,6 +945,7 @@ namespace CMS
                     string type = getCurrentToken();
                     currentIndex++;
                     string name = getCurrentToken();
+                    currentLocalVar.Add(new CMSV2Var(name, type));
                     currentCpp += " " + type + " " + name;
                     currentIndex++;
                     if (getCurrentToken() == "=")
@@ -830,6 +972,7 @@ namespace CMS
         {
             string tok = getCurrentToken();
             currentCpp += " {\n";
+            inFunction = true;
             if (tok == "{")
             {
                 // handle body
@@ -935,12 +1078,35 @@ namespace CMS
                     return;
                 }
             }
+            if (inFunction)
+            {
+                inFunction = false;
+                currentLocalVar.Clear();
+            }
         }
 
         void handleInstruc()
         {
             string curTok = getCurrentToken();
             foreach (CMSV2Var clVar in currentClassVar)
+            {
+                if (curTok == clVar.name)
+                {
+                    handleVariableOption();
+                    return;
+                }
+            }
+
+            foreach (CMSV2Var clVar in globalVar)
+            {
+                if (curTok == clVar.name)
+                {
+                    handleVariableOption();
+                    return;
+                }
+            }
+
+            foreach (CMSV2Var clVar in currentLocalVar)
             {
                 if (curTok == clVar.name)
                 {
@@ -963,28 +1129,16 @@ namespace CMS
                 currentCpp += "return ";
                 currentIndex++;
                 curTok = getCurrentToken();
-                bool has = false;
 
-                foreach (CMSV2Var clVar in currentClassVar)
+                while (getCurrentToken() != ";")
                 {
-                    if (curTok == clVar.name)
+                    currentCpp += HandlePossbileReturnerArgs(getCurrentToken()) + " ";
+                    if (getCurrentToken() != ";")
                     {
-                        handleVariableOption();
-                        has = true;
-                    }
+                        currentIndex++;
+                    } else break;
                 }
 
-                foreach (CMSV2Var clVar in currentClassFunc)
-                {
-                    if (curTok == clVar.name)
-                    {
-                        handleFunctionOption();
-                        has = true;
-                    }
-                }
-
-                if (!has) currentCpp += getCurrentToken();
-                currentIndex++;
                 if (getCurrentToken() == ";") { currentCpp += ";"; return; }
                 else
                 {

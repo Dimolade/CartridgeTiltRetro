@@ -85,14 +85,14 @@ namespace CTR.Window
             Title = "Cartridge Tilt Retro";
             var screen = Screen.PrimaryScreen;
             var workingArea = screen.WorkingArea;
-            ClientSize = new Size((int)workingArea.Width, (int)workingArea.Height);
+            ClientSize = new Size(750+480, 420);
             Resizable = false;
 
             // ListBox for the left side
             listBox = new ListBox
             {
-                Width = 1440, // 75% of the width
-                Height = 1080
+                Width = 750, // 75% of the width
+                Height = 400
             };
 
             WManager.ProjectsHolder = listBox;
@@ -113,7 +113,7 @@ namespace CTR.Window
 
             var rightPanel = new Panel
             {
-                Size = new Size(480, 1080),
+                Size = new Size(480, 400),
                 Content = new StackLayout
                 {
                     Orientation = Orientation.Vertical,

@@ -93,7 +93,6 @@ namespace CTR
             public NewProjWindow(string title, string message, int x = 300, int y = 200)
             {
                 Title = title;
-                ClientSize = new Size(x, y);
                 Resizable = false;
 
                 // Label at the top

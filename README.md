@@ -61,7 +61,18 @@ And to call MyFunction:
 MyFunction ( 15 & "A String" ) ;
 ```
 
-In Version 0.0.3, Batch Converting isnt supported yet, meaning that you cannot interact with other classes yet.
+#### Batch Conversion
+in CTREngine, CMSV2 is Batch Converted when: Building, Viewing a Script.
+####How Batch Conversion works
+It scans through the Scene and picks up SceneObject's which are Scripts.
+Then it will convert them 1 by 1, saving classes in a buffer shared accross Scripts, however be aware of:
+##### How to properly set up Batch Conversion with *Multiple Scripts*
+Make sure you set up the following:
+- Library Scripts should be at the Top, since CMSV2 Parses from Top to Bottom.
+- GamePlay Scripts should be at the Bottom, so they can interact with the Libraries.
+
+Plans:
+- Buffering all Errors until the Batch Conversion is complete so that the order of function's dont matter.
 ## Translation Files
 CMSV2 uses Translation Files to correctly Translate Things.
 Each platform has its own Translation file.

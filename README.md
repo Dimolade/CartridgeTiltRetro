@@ -63,7 +63,7 @@ MyFunction ( 15 & "A String" ) ;
 
 #### Batch Conversion
 in CTREngine, CMSV2 is Batch Converted when: Building, Viewing a Script.
-####How Batch Conversion works
+#### How Batch Conversion works
 It scans through the Scene and picks up SceneObject's which are Scripts.
 Then it will convert them 1 by 1, saving classes in a buffer shared accross Scripts, however be aware of:
 ##### How to properly set up Batch Conversion with *Multiple Scripts*

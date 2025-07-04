@@ -27,6 +27,9 @@ How the Game Looks and what works, entirely depends on the Platform.
 CTREngine features a simple Platform Manager, where you can add and make Platforms.
 Platforms use Dotnet to Build Games.
 
+Heres the source code to my N3DS Platform, its not fully complete yet but it'll be done soon.
+https://github.com/Dimolade/CTREngine-N3DS
+
 ###### More Platform Info coming soon.
 
 # CMS

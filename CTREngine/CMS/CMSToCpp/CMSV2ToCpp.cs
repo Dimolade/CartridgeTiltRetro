@@ -587,7 +587,7 @@ namespace CMS
                 {
                     string token = getCurrentToken();
 
-                    if (token == "&")
+                    if (token == ",")
                     {
                         ts += ", ";
                     }
@@ -711,7 +711,7 @@ namespace CMS
                         }
                         break;
 
-                    case "&":
+                    case ",":
                         if (currentstate == HIState.ableToCompleteAI)
                         {
                             currentCpp += ", ";
@@ -934,7 +934,7 @@ namespace CMS
                     if (cancel) return;
                     if (i != 0)
                     {
-                        if (getCurrentToken() != "&")
+                        if (getCurrentToken() != ",")
                         {
                             CancelEarly(new ErrorReason("Error: ", "Was expecting &, got: " + getCurrentToken(), currentIndex));
                             return;
@@ -1012,7 +1012,7 @@ namespace CMS
 
             if (firstArgNum)
             {
-                if (getCurrentToken() == "&")
+                if (getCurrentToken() == ",")
                 {
                     currentIndex++;
                 }
@@ -1023,7 +1023,7 @@ namespace CMS
             }
             else
             {
-                if (getCurrentToken() == "&")
+                if (getCurrentToken() == ",")
                 {
                     currentIndex++;
                 }
@@ -1040,7 +1040,7 @@ namespace CMS
 
             currentIndex++;
 
-            if (getCurrentToken() == "&" && !firstArgNum)
+            if (getCurrentToken() == "," && !firstArgNum)
             {
                 currentIndex++;
                 startIndex = getCurrentToken();
@@ -1177,7 +1177,7 @@ namespace CMS
                 {
                     if (i != 0)
                     {
-                        if (getCurrentToken() == "&")
+                        if (getCurrentToken() == ",")
                         {
                             //currentCpp += ", ";
                             f += ", ";
@@ -1189,10 +1189,10 @@ namespace CMS
                             break;
                         }
                     }
-                    while (getCurrentToken() != "&" && getCurrentToken() != ")")
+                    while (getCurrentToken() != "," && getCurrentToken() != ")")
                     {
                         f += HandlePossbileReturnerArgs(getCurrentToken()) + " ";
-                        if (getCurrentToken() != "&" && getCurrentToken() != ")")
+                        if (getCurrentToken() != "," && getCurrentToken() != ")")
                         {
                             currentIndex++;
                         } else break;

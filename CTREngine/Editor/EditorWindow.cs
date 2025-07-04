@@ -244,28 +244,28 @@ namespace CTR
         public AssetType GetAssetType()
         {
             if (extension == "png" || extension == "jpg" || extension == "bmp")
-                {
-                    return AssetType.Image;
-                }
-                if (extension == "cms")
-                {
-                    return AssetType.Script;
-                }
-                if (extension == "ttf")
-                {
-                    return AssetType.Font;
-                }
-                if (extension == "ctrif")
-                {
-                    return AssetType.ImageFont;
-                }
-                if (extension == "wav" || extension == "mp3" || extension == "ogg")
-                {
-                    return AssetType.Sound;
-                }
+            {
+                return AssetType.Image;
+            }
+            if (extension == "cms")
+            {
+                return AssetType.Script;
+            }
+            if (extension == "ttf")
+            {
+                return AssetType.Font;
+            }
+            if (extension == "ctrif")
+            {
+                return AssetType.ImageFont;
+            }
+            if (extension == "wav" || extension == "mp3" || extension == "ogg")
+            {
+                return AssetType.Sound;
+            }
             return AssetType.Other;
         }
-        
+
         public Asset(string path)
         {
             this.path = path;
@@ -275,16 +275,41 @@ namespace CTR
             name = both[0];
             extension = both[1];
 
+            SetLPath();
+        }
+
+        public void SetLPath()
+        {
             var assetsIndex = path.IndexOf("Assets", StringComparison.Ordinal);
-    
+
             if (assetsIndex >= 0)
             {
                 localPath = path.Substring(assetsIndex + "Assets/".Length);
             }
             else
             {
-                localPath = name+"."+extension;
+                localPath = name + "." + extension;
             }
+        }
+
+        public bool TryFixIfPossible(string msg = "This Asset doesnt Exist.")
+        {
+            if (!File.Exists(path))
+            {
+                MessageBox.Show(msg);
+            corrupted:
+                MessageBox.Show("Please select the Actual Asset, Previous Path: "+localPath);
+                string dir = CTR.UIButtons.FileSelect("Select Asset", new List<string>(), null);
+                if (dir != null && dir != "")
+                {
+                    path = dir;
+                    MessageBox.Show("The Asset has been overriden.");
+                    SetLPath();
+                    return true;
+                }
+                else goto corrupted;
+            }
+            return false;
         }
     }
     public static class EditorTools
@@ -634,7 +659,7 @@ namespace CTR
         {
             con.Text = Builder.failList;
         }
-        public void RefreshProperties()
+        public void RefreshProperties(Project p)
         {
             ObjectPropertiesContainer.Items.Clear();
             int index = Hierarchy.SelectedIndex;
@@ -643,7 +668,8 @@ namespace CTR
                 return;
             }
             SceneObject SO = EditorTools.currentScene[index];
-            Console.WriteLine("Refreshing Properties");
+            if (SO.asset.TryFixIfPossible()) SaveScene(p);
+            Console.WriteLine("Refreshing Properties, File Exists: "+File.Exists(SO.asset.path)+"File Path: "+SO.asset.path);
             if (SO.OP.initted == false)
             {
                 SO.OP.InitProps(SO.assetType, SO);
@@ -686,6 +712,7 @@ namespace CTR
                 {
                     if (a.assetType == AssetType.Script)
                     {
+                        if (a.asset.TryFixIfPossible("A Script's Asset doing Conversion was Invalid.")) SaveScene(p);
                         tc.Add(File.ReadAllText(a.asset.path));
                         so.Add(a);
                     }
@@ -1139,8 +1166,8 @@ namespace CTR
 
             ListBoxUtils.MakeListBoxReorderable(Hierarchy);
             // Propertie
-            Hierarchy.SelectedIndexChanged += (sender, e) => { RefreshProperties(); };
-            Hierarchy.MouseDown += (sender, e) => { RefreshProperties(); };
+            Hierarchy.SelectedIndexChanged += (sender, e) => { RefreshProperties(p); };
+            Hierarchy.MouseDown += (sender, e) => { RefreshProperties(p); };
             EditorTools.currentScene.ListChanged += (sender, e) => { RefreshHierarchy(); };
             //Hierarchy
 

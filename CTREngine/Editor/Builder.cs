@@ -58,6 +58,7 @@ public static class CMSWatcher
                 {
                     Builder.failList += a.name + " : " + "Success!\n";
                 }*/ // Non Batching ^^
+                a.asset.TryFixIfPossible();
                 tc.Add(File.ReadAllText(a.asset.path));
                 anames.Add(a.name);
             }

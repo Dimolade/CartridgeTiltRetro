@@ -56,12 +56,12 @@ You might have already noticed the space between every Token, this is intended a
 #### Function Parameters
 Parameters are structured like this:
 ```csharp
-public void MyFunction ( parameter /* <- indicates parameters */ int /* <- type */ myInt /* <- name */ & /* <- Parameter seperator */ string myString )
+public void MyFunction ( parameter /* <- indicates parameters */ int /* <- type */ myInt /* <- name */ , /* <- Parameter seperator */ string myString )
 ```
 
 And to call MyFunction:
 ```csharp
-MyFunction ( 15 & "A String" ) ;
+MyFunction ( 15 , "A String" ) ;
 ```
 
 #### Batch Conversion

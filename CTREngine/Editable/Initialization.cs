@@ -80,7 +80,27 @@ string CTRGame::Description
 string Game.Version
 string CTRGame::Version
 ScreenInfo Platform.GetScreen
-ScreenInfo Platform::GetScreen";
+ScreenInfo Platform::GetScreen
+float Time.deltaTime
+float Time::deltaTime
+Vector2 Input.GamePad.GetRightJoy
+Vector2 GamePad::GetRightJoy
+Vector2 Input.GamePad.GetLeftJoy
+Vector2 GamePad::GetLeftJoy
+bool Input.Actions.Get
+bool Actions::Get
+bool Input.Actions.GetDown
+bool Actions::GetDown
+bool Input.Actions.GetUp
+bool Actions::GetUp
+void Input.Mouse.Init
+void Mouse::InitMouse
+void Input.Mouse.Update
+void Mouse::UpdateMouse
+Vector2 Input.Mouse.position
+Vector2 Mouse::position
+Vector2 Input.Mouse.screen
+Vector2 Mouse::screen";
 		public static void Init()
 		{
 			string path = Path.Combine(Paths.GetCTRPath(), "DefaultBuild/");

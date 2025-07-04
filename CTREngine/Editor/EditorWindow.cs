@@ -1286,6 +1286,67 @@ namespace CTR
             }
         }
 
+        string ReplaceBefore(string input, string marker, string replacement)
+        {
+            int index = input.IndexOf(marker);
+            if (index == -1) return input;
+            return replacement + input.Substring(index);
+        }
+
+        void PreviewScene()
+        {
+            SelectPlatformDialog SPL = new SelectPlatformDialog("Choose Platform to Display Scene on:");
+            SPL.ShowModal(this);
+            if (SPL.choseYes)
+            {
+                Platform p2 = CTR.FileManager.Platforms.GetPlatforms()[SPL.platform.SelectedIndex];
+                string assemblyPath = Path.Combine(p2.installPath, "MainAssembly.dll");
+                int[][] screens = (int[][])PlatformDLLLoader.GetValueFromDll(assemblyPath, "ScreenSizes");
+
+                List<string> Screens = new List<string>();
+                int i = 1;
+                foreach (int[] screen in screens)
+                {
+                    Screens.Add("Screen " + i + $" ({screen[0] + "x" + screen[1]})");
+                    i++;
+                }
+
+                DropdownDialog D = new DropdownDialog("Choose Screen", Screens);
+                D.ShowModal(this);
+
+                if (D.yes)
+                {
+                    DisplayPreview dp = new DisplayPreview(screens[D.selectedIndex][0], screens[D.selectedIndex][1], new Eto.Drawing.Color(0f, 0f, 0f, 1f), p2);
+                    dp.Show();
+
+                    foreach (SceneObject SO in EditorTools.currentScene)
+                    {
+                        if (Convert.ToInt32(SO.OP.Props[2].currentValue) != D.selectedIndex)
+                            continue;
+
+                        if (SO.assetType == AssetType.Image)
+                        {
+                            Image img = dp.LoadImage(SO.asset.path);
+                            Vector3 po = (Vector3)SO.OP.Props[4].currentValue;
+                            Vector3 r = (Vector3)SO.OP.Props[5].currentValue;
+                            Vector3 s = (Vector3)SO.OP.Props[6].currentValue;
+                            Color c = (Color)SO.OP.Props[9].currentValue;
+                            dp.DrawImage(img, (int)po.x, (int)po.y, c, s, r);
+                        }
+                    }
+                }
+            }
+        }
+
+        void SaveScene(Project p)
+        {
+            string directoryPath = Path.Combine(p.path, "MainScene");
+            Directory.CreateDirectory(directoryPath);
+
+            string filePath = Path.Combine(directoryPath, "mainScene.json");
+            File.WriteAllText(filePath, JsonConvert.SerializeObject(EditorTools.currentScene));
+        }
+
         void Actions(string name, Panel callFrom, Project p)
         {
             if (name == "Open Asset Maker")
@@ -1296,15 +1357,10 @@ namespace CTR
             else if (name == "Build")
             {
                 Builder.Build(this, p);
-                //PlatformDLLLoader.CallBuildPlatform();
             }
             else if (name == "Save Scene")
             {
-                string directoryPath = Path.Combine(p.path, "MainScene");
-                Directory.CreateDirectory(directoryPath);
-
-                string filePath = Path.Combine(directoryPath, "mainScene.json");
-                File.WriteAllText(filePath, JsonConvert.SerializeObject(EditorTools.currentScene));
+                SaveScene(p);
             }
             else if (name == "Load Scene")
             {
@@ -1316,7 +1372,16 @@ namespace CTR
                     EditorTools.currentScene = JsonConvert.DeserializeObject<BindingList<SceneObject>>(File.ReadAllText(filePath));
                     foreach (SceneObject SO in EditorTools.currentScene)
                     {
-                        SO.OP.InitProps(SO.assetType, SO);
+                        if (File.Exists(SO.asset.path))
+                        {
+                            SO.OP.InitProps(SO.assetType, SO);
+                        }
+                        else
+                        {
+                            SO.asset.path = ReplaceBefore(SO.asset.path, "Assets/", p.path + "/");
+                            SO.OP.InitProps(SO.assetType, SO);
+                        }
+                        SaveScene(p);
                     }
                     RefreshHierarchy();
                 }
@@ -1329,48 +1394,7 @@ namespace CTR
             }
             else if (name == "Preview Scene")
             {
-                SelectPlatformDialog SPL = new SelectPlatformDialog("Choose Platform to Display Scene on:");
-                SPL.ShowModal(this);
-                if (SPL.choseYes)
-                {
-                    // Make Build Folder
-                    Platform p2 = CTR.FileManager.Platforms.GetPlatforms()[SPL.platform.SelectedIndex];
-                    string assemblyPath = Path.Combine(p2.installPath, "MainAssembly.dll");
-                    int[][] screens = (int[][])PlatformDLLLoader.GetValueFromDll(assemblyPath, "ScreenSizes");
-
-                    List<string> Screens = new List<string>();
-                    int i = 1;
-                    foreach (int[] screen in screens)
-                    {
-                        Screens.Add("Screen " + i + $" ({screen[0] + "x" + screen[1]})");
-                        i++;
-                    }
-
-                    DropdownDialog D = new DropdownDialog("Choose Screen", Screens);
-                    D.ShowModal(this);
-
-                    if (D.yes)
-                    {
-                        DisplayPreview dp = new DisplayPreview(screens[D.selectedIndex][0], screens[D.selectedIndex][1], new Eto.Drawing.Color(0f, 0f, 0f, 1f), p2);
-                        dp.Show();
-
-                        foreach (SceneObject SO in EditorTools.currentScene)
-                        {
-                            if (Convert.ToInt32(SO.OP.Props[2].currentValue) != D.selectedIndex)
-                                continue;
-
-                            if (SO.assetType == AssetType.Image)
-                            {
-                                Image img = dp.LoadImage(SO.asset.path);
-                                Vector3 po = (Vector3)SO.OP.Props[4].currentValue;
-                                Vector3 r = (Vector3)SO.OP.Props[5].currentValue;
-                                Vector3 s = (Vector3)SO.OP.Props[6].currentValue;
-                                Color c = (Color)SO.OP.Props[9].currentValue;
-                                dp.DrawImage(img, (int)po.x, (int)po.y, c, s, r);
-                            }
-                        }
-                    }
-                }
+                PreviewScene();
             }
         }
     }

@@ -109,27 +109,44 @@ namespace CMS
     public class CMSV2BatchCR
     {
         public List<CMSV2ConversionResult> CMSV2CR = new List<CMSV2ConversionResult>();
+        public List<CMSV2Conversion> CMSV2C = new List<CMSV2Conversion>();
         List<string> converts = new List<string>();
+        List<string> paths = new List<string>();
 
         public void StartJob(string buildDir)
         {
-            CMSV2Conversion lcc = null;
+            int i = 0;
             foreach (string c in converts)
             {
                 CMSV2Conversion cc = new CMSV2Conversion(c);
-                if (lcc != null)
-                {
-                    cc.globalVar = lcc.globalVar;
-                    cc.currentCEC = lcc.currentCEC;
-                }
-                CMSV2CR.Add(cc.StartJob(buildDir));
-                lcc = cc;
+                cc.fileName = Path.GetFileNameWithoutExtension(paths[i]);
+                cc.DoSymbolRun(buildDir);
+                CMSV2C.Add(cc);
+                i++;
+            }
+
+            List<string> symbols = new List<string>();
+            List<CMSV2Var> globalVar = new List<CMSV2Var>();
+
+            foreach (CMSV2Conversion cms in CMSV2C)
+            {
+                globalVar.AddRange(cms.globalVar);
+                symbols.AddRange(cms.validSymbols);
+            }
+
+            foreach (CMSV2Conversion cms in CMSV2C)
+            {
+                cms.globalVar = globalVar;
+                cms.validSymbols = symbols;
+                cms.converted = CMSV2C;
+                CMSV2CR.Add(cms.StartJob(buildDir));
             }
         }
 
-        public CMSV2BatchCR(List<string> tc)
+        public CMSV2BatchCR(List<string> tc, List<string> inc)
         {
             converts = tc;
+            paths = inc;
         }
     }
 
@@ -141,9 +158,9 @@ namespace CMS
             return cc.StartJob(buildDir);
         }
 
-        public static CMSV2BatchCR ConvertBatch(List<string> toConvert, string buildDir)
+        public static CMSV2BatchCR ConvertBatch(List<string> toConvert, List<string> paths, string buildDir)
         {
-            CMSV2BatchCR cc = new CMSV2BatchCR(toConvert);
+            CMSV2BatchCR cc = new CMSV2BatchCR(toConvert, paths);
             cc.StartJob(buildDir);
             return cc;
         }
@@ -216,6 +233,7 @@ namespace CMS
         public List<CMSV2Var> currentLocalVar = new List<CMSV2Var>();
         public List<CMSV2Var> globalVar = new List<CMSV2Var>();
         public List<CMSV2Var> currentClassFunc = new List<CMSV2Var>();
+        public List<string> validSymbols = new List<string>();
         CMSV2ConversionResult result;
         CMSV2Class currentClass;
         public CppExpressionConverter currentCEC;
@@ -224,10 +242,37 @@ namespace CMS
         bool inComment = false;
         bool inFunction;
         string addBeforeVariable = "";
+        public List<string> validScriptNames;
+        public List<string> classNames = new List<string>();
+        public List<string> includeList = new List<string>();
+        public List<CMSV2Conversion> converted;
+        public string fileName;
+        int run = 0; //run 0 is symbol collection, run 1 is actual conversion
+
+        public void DoSymbolRun(string buildDir)
+        {
+            run = 0;
+            Tokens = CMSV2Tokenizer.Tokenize(cmsv2Script);
+            currentCpp = "#include \"CTR/AutoIncludes.h\"\nusing namespace std;";
+            AddNLS();
+            // Symbol Run
+            result = new CMSV2ConversionResult();
+            currentAdds = new List<TokenAdditives>();
+            currentCEC = CEC.FromSource(buildDir);
+            IdentifyNextExpression();
+        }
 
         public CMSV2ConversionResult StartJob(string buildDir)
         {
             Tokens = CMSV2Tokenizer.Tokenize(cmsv2Script);
+            inClass = false;
+            inComment = false;
+            inFunction = false;
+            bodiesToClose = 0;
+            cancel = false;
+            currentIndex = 0;
+            // Actual Run
+            run = 1;
             currentCpp = "#include \"CTR/AutoIncludes.h\"\nusing namespace std;";
             currentAdds = new List<TokenAdditives>();
             currentCEC = CEC.FromSource(buildDir);
@@ -253,7 +298,10 @@ namespace CMS
 
         void CancelEarly(ErrorReason er)
         {
-            cancel = true;
+            if (run == 1)
+            {
+                cancel = true;   
+            }
             curError = er;
         }
 
@@ -312,6 +360,10 @@ namespace CMS
 
                 case "Else":
                     currentCpp += " else ";
+                break;
+
+                case "Use":
+                    HandleUse();
                 break;
 
                 case "}":
@@ -444,6 +496,15 @@ namespace CMS
                                 break;
                             }
                         }
+                        foreach (string sym in validSymbols)
+                        {
+                            if (thisToken == sym)
+                            {
+                                handleVarOrFunc();
+                                canc = false;
+                                break;
+                            }
+                        }
                     }
                     if (canc) CancelEarly(new ErrorReason("Error: ", "Unrecognized Token: \"" + thisToken + "\"", currentIndex));
                     break;
@@ -501,6 +562,31 @@ namespace CMS
                 {
                     string acc = "";
                     if (fixAccess(var, thisToken, out acc))
+                    {
+                        Tokens[currentIndex] = acc;
+                        return handleFunctionOption(false,false);
+                    }
+                }
+            }
+            foreach (string var in validSymbols)
+            {
+                if (thisToken == var)
+                {
+                    return TryTranslate(thisToken);
+                }
+                else if (thisToken.StartsWith(var + ".") && Tokens[currentIndex + 1] != "(")
+                {
+                    string acc = "";
+                    if (fixAccess(new CMSV2Var(var,var), thisToken, out acc))
+                    {
+                        Tokens[currentIndex] = acc;
+                        return TryTranslate(acc);
+                    }
+                }
+                else if (thisToken.StartsWith(var + ".") && Tokens[currentIndex + 1] == "(")
+                {
+                    string acc = "";
+                    if (fixAccess(new CMSV2Var(var,var), thisToken, out acc))
                     {
                         Tokens[currentIndex] = acc;
                         return handleFunctionOption(false,false);
@@ -606,6 +692,30 @@ namespace CMS
                 return ts + " )";
             }
             return TryTranslate(thisToken);
+        }
+
+        void HandleUse()
+        {
+            currentIndex++;
+            string toInclude = getCurrentToken();
+            if (run == 0) includeList.Add(toInclude);
+            if (run == 0) return;
+            foreach (CMSV2Conversion con in converted)
+            {
+                Console.WriteLine("Looking for: " + toInclude + " while including, current is: " + con.fileName);
+                if (con.fileName == toInclude)
+                {
+                    currentCpp += "// Forward Declerations for CMS: " + toInclude + "\n";
+                    foreach (string c in con.classNames)
+                    {
+                        currentCpp += "class " + c + ";\n";
+                    }
+                    break;
+                }
+            }
+            currentIndex++;
+            if (getCurrentToken() == ";") { AddNLS(); }
+            else CancelEarly(new ErrorReason("Error: ", "Syntax Error in Use, Usage: 'Use cmsFileName ;'", currentIndex));
         }
 
         void HandleIf()
@@ -804,6 +914,8 @@ namespace CMS
             int startbodies = bodiesToClose;
             currentIndex++;
             currentClass = cl;
+            if (run == 0) validSymbols.Add(cl.name);
+            if (run == 0) classNames.Add(cl.name);
             while (startbodies <= bodiesToClose) // startbodies = 1; bodiesToClose = 1;
             {
                 IdentifyNextExpression();
@@ -874,6 +986,7 @@ namespace CMS
             currentIndex++;
             currentAdds.Clear();
             string varName = getCurrentToken();
+            if (run == 0) validSymbols.Add(varName);
 
             currentIndex++;
             isFunc = getCurrentToken() == "(";
@@ -936,7 +1049,7 @@ namespace CMS
                     {
                         if (getCurrentToken() != ",")
                         {
-                            CancelEarly(new ErrorReason("Error: ", "Was expecting &, got: " + getCurrentToken(), currentIndex));
+                            CancelEarly(new ErrorReason("Error: ", "Was expecting ',', got: " + getCurrentToken(), currentIndex));
                             return;
                         }
                         currentIndex++;
@@ -1106,6 +1219,24 @@ namespace CMS
                 }
             }
 
+            foreach (string clVar in validSymbols)
+            {
+                if (curTok == clVar)
+                {
+                    handleVarOrFunc();
+                    return;
+                }
+            }
+
+            foreach (string clVar in currentCEC.cmsv2Expression)
+            {
+                if (curTok == clVar)
+                {
+                    handleVarOrFunc();
+                    return;
+                }
+            }
+
             foreach (CMSV2Var clVar in currentLocalVar)
             {
                 if (curTok == clVar.name)
@@ -1185,7 +1316,7 @@ namespace CMS
                         }
                         else
                         {
-                            CancelEarly(new ErrorReason("Error: ", "Was expecting &, got: \"" + getCurrentToken() + "\"", currentIndex));
+                            CancelEarly(new ErrorReason("Error: ", "Was expecting ',', got: \"" + getCurrentToken() + "\"", currentIndex));
                             break;
                         }
                     }

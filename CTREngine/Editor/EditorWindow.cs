@@ -705,8 +705,20 @@ namespace CTR
             ObjectPropertiesContainer.Items.Add(removeButton);
             if (SO.assetType == AssetType.Script)
             {
-                Label nl = new Label { Text = "Generated:\n", Style = "left-align" };
+                Label NLPrev = new Label { Text = "Conversion Output:", Style = "left-align" };
+                var nl = new TextArea
+                {
+                    Text = "",
+                    ReadOnly = true,
+                    Wrap = true,
+                    Border = BorderType.None,
+                    BackgroundColor = Colors.Transparent,
+                    Style = "left-align",
+                    Width = 600,
+                    Height = 450
+                };
                 List<string> tc = new List<string>();
+                List<string> ps = new List<string>();
                 List<SceneObject> so = new List<SceneObject>();
                 foreach (SceneObject a in EditorTools.currentScene)
                 {
@@ -715,9 +727,10 @@ namespace CTR
                         if (a.asset.TryFixIfPossible("A Script's Asset doing Conversion was Invalid.")) SaveScene(p);
                         tc.Add(File.ReadAllText(a.asset.path));
                         so.Add(a);
+                        ps.Add(a.asset.path);
                     }
                 }
-                CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
+                CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, ps, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
                 CMSV2ConversionResult res = null;
 
                 for (int i = 0; i < br.CMSV2CR.Count; i++)
@@ -742,7 +755,14 @@ namespace CTR
 
                 var contentPanel = new Panel
                 {
-                    Content = nl
+                    Content = new StackLayout
+                    {
+                        Items = {
+                            NLPrev,
+                            nl
+                        },
+                        Orientation = Orientation.Vertical
+                    }
                 };
 
                 var scrollable = new Scrollable

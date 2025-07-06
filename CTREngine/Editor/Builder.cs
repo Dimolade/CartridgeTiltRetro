@@ -40,6 +40,7 @@ public static class CMSWatcher
         bool returnFalse = false;
         Builder.failList = "";
         List<string> tc = new List<string>();
+        List<string> ps = new List<string>();
         List<string> anames = new List<string>();
         foreach (SceneObject a in EditorTools.currentScene)
         {
@@ -60,10 +61,11 @@ public static class CMSWatcher
                 }*/ // Non Batching ^^
                 a.asset.TryFixIfPossible();
                 tc.Add(File.ReadAllText(a.asset.path));
+                ps.Add(a.asset.path);
                 anames.Add(a.name);
             }
         }
-        CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
+        CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, ps, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
         int i = 0;
         foreach (CMSV2ConversionResult res in br.CMSV2CR)
         {
@@ -192,6 +194,7 @@ public static class Builder
 
             List<string> tc = new List<string>();
             List<string> anames = new List<string>();
+            List<string> ps = new List<string>();
             List<SceneObject> so = new List<SceneObject>();
             foreach (SceneObject a in EditorTools.currentScene)
             {
@@ -199,10 +202,11 @@ public static class Builder
                 {
                     tc.Add(File.ReadAllText(a.asset.path));
                     anames.Add(a.name);
+                    ps.Add(a.asset.path);
                     so.Add(a);
                 }
             }
-            CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
+            CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, ps, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
             int i = 0;
 
             GenerateEntryPoints(p, br.CMSV2CR, so);

@@ -49,9 +49,9 @@ public static class HelloWorld inherits CTREntry
 }
 ```
 
-You might have already noticed the space between every Token, this is intended as part of Syntax.
-`);` <- Errors
-`) ;` <- Correct
+You might have already noticed the space between every Token, this is intended as part of Syntax. <br>
+`);` <- Errors <br>
+`) ;` <- Correct <br>
 
 #### Function Parameters
 Parameters are structured like this:
@@ -66,16 +66,16 @@ MyFunction ( 15 , "A String" ) ;
 
 #### Batch Conversion
 in CTREngine, CMSV2 is Batch Converted when: Building, Viewing a Script.
-#### How Batch Conversion works
-It scans through the Scene and picks up SceneObject's which are Scripts.
-Then it will convert them 1 by 1, saving classes in a buffer shared accross Scripts, however be aware of:
-##### How to properly set up Batch Conversion with *Multiple Scripts*
-Make sure you set up the following:
-- Library Scripts should be at the Top, since CMSV2 Parses from Top to Bottom.
-- GamePlay Scripts should be at the Bottom, so they can interact with the Libraries.
 
-Plans:
-- Buffering all Errors until the Batch Conversion is complete so that the order of function's dont matter.
+#### How Batch Conversion works
+It First does a "Symbol Run", where it collects names of Returners (Functions, Vars). It also collects classes. <br>
+Then comes the actual conversion, itll look in the Symbols if the Returner hasnt been defined yet. <br>
+
+#### How to make scripts interact with each other
+
+Use the `Use` operator at the top of CMSV2 Scripts to include other Scripts by forward declaring its Classes. <br>
+Usage: `Use MyOtherCMSV2Script ; ` <br>
+
 ## Translation Files
 CMSV2 uses Translation Files to correctly Translate Things.
 Each platform has its own Translation file.

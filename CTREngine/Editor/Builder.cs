@@ -112,10 +112,10 @@ public static class Builder
         }
 
         string cppSnippetFile = "";
-        for (int i = 0; i < results.Count; i++)
+        for (int i = 0; i < entryPoints.Count; i++)
         {
             string ep = entryPoints[i];
-            string fName = soL[i].Namespace + soL[i].name;
+            string fName = soL[i].name;
             cppSnippetFile += (ep+"* "+fName + " = new " + ep + "();\n");
         }
         File.WriteAllText(targetPath+"EntryPoints",cppSnippetFile);
@@ -208,6 +208,11 @@ public static class Builder
             }
             CMSV2BatchCR br = CMSV2ToCpp.ConvertBatch(tc, ps, CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/");
             int i = 0;
+            foreach (CMS.CMSV2ConversionResult res in br.CMSV2CR)
+            {
+                File.WriteAllText(targetPath + anames[i] + ".hpp", res.Cpp);
+                i++;
+            }
 
             GenerateEntryPoints(p, br.CMSV2CR, so);
             

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace CMS
@@ -358,19 +359,63 @@ namespace CMS
                     HandleIf();
                 break;
 
-                case "Else":
-                    currentCpp += " else ";
+                case "Return":
+                    currentCpp += "return ";
+                    currentIndex++;
+
+                    while (getCurrentToken() != ";")
+                    {
+                        currentCpp += HandlePossbileReturnerArgs(getCurrentToken()) + " ";
+                        if (getCurrentToken() != ";")
+                        {
+                            currentIndex++;
+                        } else break;
+                    }
+
+                    if (getCurrentToken() == ";") { currentCpp += ";"; }
+                    else
+                    {
+                        CancelEarly(new ErrorReason("Error: ", "Expected semicolon, got: " + getCurrentToken(), currentIndex));
+                        return;
+                    }
                 break;
 
+                case "Point":
+                    HandlePoint();
+                break;
+
+                case "Goto":
+                    HandleGoto();
+                break;
+
+                case "Else":
+                    if (Tokens[currentIndex + 1] == "If")
+                    {
+                        currentIndex++;
+                        currentCpp += "\nelse ";
+                        HandleIf();
+                    }
+                    else
+                    {
+                        currentIndex++;
+                        currentCpp += "\nelse ";
+                        handleFunctionContents(false);
+                    }
+                break;
+    
                 case "Use":
                     HandleUse();
+                break;
+
+                case "Coroutine":
+                    HandleCoroutine();
                 break;
 
                 case "}":
                     currentCpp += "}";
                     bodiesToClose--;
                     //AddNLS();
-                    break;
+                break;
 
                 case "/*":
                     inComment = true;
@@ -398,6 +443,7 @@ namespace CMS
                             Console.WriteLine("Detected Returner");
                             canc = false;
                             handleReturner();
+                            goto tokenEnd;
                         }
                         else if (!inClass && thisToken == rType)
                         {
@@ -413,7 +459,7 @@ namespace CMS
                             {
                                 canc = false;
                                 handleVariableOption();
-                                break;
+                                goto tokenEnd;
                             }
                             else if (thisToken.StartsWith(var.name+"."))
                             {
@@ -423,7 +469,7 @@ namespace CMS
                                     canc = false;
                                     Tokens[currentIndex] = acc;
                                     handleVariableOption();
-                                    break;
+                                    goto tokenEnd;
                                 }
                             }
                         }
@@ -433,7 +479,7 @@ namespace CMS
                             {
                                 canc = false;
                                 handleVariableOption();
-                                break;
+                                goto tokenEnd;
                             }
                             else if (thisToken.StartsWith(var.name+"."))
                             {
@@ -443,7 +489,7 @@ namespace CMS
                                     canc = false;
                                     Tokens[currentIndex] = acc;
                                     handleVariableOption();
-                                    break;
+                                    goto tokenEnd;
                                 }
                             }
                         }
@@ -453,7 +499,7 @@ namespace CMS
                             {
                                 canc = false;
                                 handleVariableOption();
-                                break;
+                                goto tokenEnd;
                             }
                             else if (thisToken.StartsWith(var.name + "."))
                             {
@@ -463,7 +509,7 @@ namespace CMS
                                     canc = false;
                                     Tokens[currentIndex] = acc;
                                     handleVariableOption();
-                                    break;
+                                    goto tokenEnd;
                                 }
                             }
                         }
@@ -473,7 +519,7 @@ namespace CMS
                             {
                                 canc = false;
                                 handleFunctionOption();
-                                break;
+                                goto tokenEnd;
                             }
                             else if (thisToken.StartsWith(var.name + "."))
                             {
@@ -483,7 +529,7 @@ namespace CMS
                                     canc = false;
                                     Tokens[currentIndex] = acc;
                                     handleFunctionOption();
-                                    break;
+                                    goto tokenEnd;
                                 }
                             }
                         }
@@ -493,7 +539,7 @@ namespace CMS
                             {
                                 handleVarOrFunc();
                                 canc = false;
-                                break;
+                                goto tokenEnd;
                             }
                         }
                         foreach (string sym in validSymbols)
@@ -502,13 +548,15 @@ namespace CMS
                             {
                                 handleVarOrFunc();
                                 canc = false;
-                                break;
+                                goto tokenEnd;
                             }
                         }
                     }
                     if (canc) CancelEarly(new ErrorReason("Error: ", "Unrecognized Token: \"" + thisToken + "\"", currentIndex));
-                    break;
+                break;
             }
+            tokenEnd:
+            Console.WriteLine("Token End");
             currentIndex++;
             IdentifyNextExpression();
         }
@@ -720,31 +768,134 @@ namespace CMS
 
         void HandleIf()
         {
+            // should be "If"
             currentIndex++;
             currentCpp += "if (";
-            bool usedP = false;
-            if (getCurrentToken() == "(")
+            Console.WriteLine("###### If Handler ######");
+            if (getCurrentToken() != "(")
             {
-                currentIndex++;
-                usedP = true;
+                CancelEarly(new ErrorReason("Error: ", "Was Expecting Paranthesis Opening.", currentIndex));
+                return;
             }
-            while (getCurrentToken() != ")" && getCurrentToken() != "{")
+            currentIndex++;
+            Console.WriteLine("Token after If ( is " + getCurrentToken());
+            while (getCurrentToken() != ")")
             {
                 currentCpp += HandlePossbileReturnerArgs(getCurrentToken()) + " ";
-                if (getCurrentToken() != ")" && getCurrentToken() != "{")
+                if (getCurrentToken() == ")")
                 {
-                    currentIndex++;
+                    break;
                 }
-            }
-            if (getCurrentToken() == "{" && usedP)
-            {
-                CancelEarly(new ErrorReason("Error", "Are you being Intentionally dense? \"huh\"", currentIndex));
-                return;
+                currentIndex++;
+                if (getCurrentToken() == ")")
+                {
+                    break;
+                }
             }
             currentIndex++;
 
             currentCpp += ") ";
-            handleFunctionContents();
+            handleFunctionContents(false);
+        }
+
+        string HandlePossibleReturnerArgsWhile()
+        {
+            string e = "";
+            while (getCurrentToken() != ",")
+            {
+                currentIndex++;
+                e += HandlePossbileReturnerArgs(getCurrentToken());
+                if (getCurrentToken() == ",") break;
+            }
+            return e;
+        }
+
+        bool SymbolExists(string thisToken)
+        {
+            foreach (CMSV2Var var in currentClassVar) if (thisToken == var.name) return true;
+            foreach (string var in validSymbols) if (thisToken == var) return true;
+            foreach (CMSV2Var var in globalVar) if (thisToken == var.name) return true;
+            foreach (CMSV2Var var in currentLocalVar) if (thisToken == var.name) return true;
+            foreach (CMSV2Var var in currentClassFunc) if (thisToken == var.name) return true;
+            foreach (string expr in currentCEC.cmsv2Expression) if (thisToken == expr) return true;
+            return false;
+        }
+
+        void HandlePoint()
+        {
+            currentIndex++;
+            string pointName = getCurrentToken();
+            currentIndex++;
+            if (getCurrentToken() != ";") { new ErrorReason("Error: ", "Expected semicolon, got: " + getCurrentToken(), currentIndex); return; }
+            currentCpp += "\n" + pointName + ":";
+        }
+
+        void HandleGoto()
+        {
+            currentIndex++;
+            string pointName = getCurrentToken();
+            currentIndex++;
+            if (getCurrentToken() != ";") { new ErrorReason("Error: ", "Expected semicolon, got: " + getCurrentToken(), currentIndex); return; }
+            currentCpp += "\ngoto " + pointName + ";";
+        }
+
+        void HandleCoroutine()
+        {
+            currentIndex++;
+            string curb = "Coroutiner::CoroutineFunction(";
+            string funcName = getCurrentToken();
+            currentIndex++;
+            List<string> args = new List<string>();
+            if (getCurrentToken() == "(")
+            {
+                curb += HandlePossibleReturnerArgsWhile(); // frameCount
+                currentIndex++;
+                while (getCurrentToken() != ")") // first token after frameCount , (thisToken)
+                {
+                    if (SymbolExists(getCurrentToken()))
+                    {
+                        args.Add(getCurrentToken());
+                    }
+                    else if (getCurrentToken() != ",")
+                    {
+                        CancelEarly(new ErrorReason("Error: ", "Coroutine's only support variables. This Symbol is unknown.", currentIndex));
+                        return;
+                    }
+                    else
+                    {
+                        currentIndex++;
+                        continue;
+                    }
+                    if (getCurrentToken() == ")") break;
+                    currentIndex++;
+                }
+                currentIndex++; // ) thisToken expected ;
+                if (getCurrentToken() != ";") { new ErrorReason("Error: ", "Expected semicolon, got: " + getCurrentToken(), currentIndex); return; }
+            }
+            else
+            {
+                curb += HandlePossibleReturnerArgsWhile(); // frameCount
+                currentIndex++;
+                if (getCurrentToken() != ";") { new ErrorReason("Error: ", "Expected semicolon, got: " + getCurrentToken(), currentIndex); return; }
+            }
+
+            curb += " [";
+            for (int i = 0; i < args.Count; i++)
+            {
+                curb += args[i];
+                if (i != args.Count - 1)
+                {
+                    curb += ", ";
+                }
+            }
+            curb += $"](int frame) {{ {funcName}( frame";
+            for (int i = 0; i < args.Count; i++)
+            {
+                curb += ", ";
+                curb += args[i];
+            }
+            curb += "); });\n"; // currentToken should always be ";" here.
+            currentCpp += curb;
         }
 
         void HandleClass()
@@ -1081,7 +1232,7 @@ namespace CMS
             }
         }
 
-        void handleFunctionContents()
+        void handleFunctionContents(bool isFunc = true)
         {
             string tok = getCurrentToken();
             currentCpp += " {\n";
@@ -1090,7 +1241,9 @@ namespace CMS
             {
                 // handle body
                 currentIndex++;
-                handleBody();
+                if (isFunc)
+                    handleBody();
+                else handleBodyNonFunc();
             }
             else // handle singleCommand
             {
@@ -1169,6 +1322,28 @@ namespace CMS
 
             currentIndex++;
             handleFunctionContents();
+        }
+
+        void handleBodyNonFunc()
+        {
+            int startbodies = bodiesToClose;
+            while (startbodies <= bodiesToClose) // startbodies = 1; bodiesToClose = 1;
+            {
+                IdentifyNextExpression();
+                if (startbodies > bodiesToClose)
+                {
+                    return;
+                }
+                if (cancel)
+                {
+                    return;
+                }
+                if (currentIndex > Tokens.Count - 1)
+                {
+                    CancelEarly(new ErrorReason("Error: ", "Didn't close out of Body.", currentIndex));
+                    return;
+                }
+            }
         }
 
         void handleBody()
@@ -1255,7 +1430,7 @@ namespace CMS
                 }
             }
 
-            if (curTok == "return")
+            if (curTok == "Return")
             {
                 currentCpp += "return ";
                 currentIndex++;
@@ -1294,15 +1469,15 @@ namespace CMS
         string handleFunctionOption(bool useS = true, bool app = true)
         {
             Console.WriteLine("Handling a Function Call");
-            string var = TryTranslate(getCurrentToken());
-            currentIndex++;
-            string f = var;
+            string var = TryTranslate(getCurrentToken()); // MakeLetter
+            currentIndex++; // (
+            string f = var; // "MakeLetter"
             //currentCpp += var;
             if (getCurrentToken() == "(")
             {
                 //currentCpp += "(";
-                f += "(";
-                currentIndex++;
+                f += "("; // (i == 0) "MakeLetter("
+                currentIndex++; // on First: Vector3
                 int i = 0;
                 while (getCurrentToken() != ")")
                 {
@@ -1322,36 +1497,41 @@ namespace CMS
                     }
                     while (getCurrentToken() != "," && getCurrentToken() != ")")
                     {
-                        f += HandlePossbileReturnerArgs(getCurrentToken()) + " ";
+                        f += HandlePossbileReturnerArgs(getCurrentToken());
+                        if (getCurrentToken() != "," && getCurrentToken() != ")") f += " ";
                         if (getCurrentToken() != "," && getCurrentToken() != ")")
                         {
                             currentIndex++;
-                        } else break;
+                        }
+                        else break;
                     }
                     i++;
                 }
                 if (cancel) return f;
                 f += ")";
                 currentIndex++;
-                //currentCpp += ")";
+                Console.WriteLine("Function after parsing: "+f+"\nThis Token: "+getCurrentToken()+", useS? "+useS);
                 if (useS)
                 {
-                    if (getCurrentToken() == ";" && useS) {
+                    if (getCurrentToken() == ";" && useS)
+                    {
                         if (app) currentCpp += f + ";\n";
+                        Console.WriteLine("!!!! Function Option useS exiting, NextToken: "+Tokens[currentIndex+1]);
+                        //Console.WriteLine(Environment.StackTrace);
                         return f;
                     }
                     else
                     {
-                        CancelEarly(new ErrorReason("Error: ", "Expected Semicolon in function call, got:"+getCurrentToken(), currentIndex));
+                        CancelEarly(new ErrorReason("Error: ", "Expected Semicolon in function call, got:" + getCurrentToken(), currentIndex));
                     }
                 }
                 else
                 {
-                    if (getCurrentToken() == ")") {currentIndex++;}
+                    if (getCurrentToken() == ")") { currentIndex++; }
                     if (Tokens[currentIndex - 2] == ")") { f += ")"; }
                     else
                     {
-                        Console.WriteLine("In Function: "+var+" Tokens -2 = "+Tokens[currentIndex-2]);
+                        Console.WriteLine("In Function: " + var + " Tokens -2 = " + Tokens[currentIndex - 2]);
                     }
                     if (getCurrentToken() == ";") return f;
                     /*else

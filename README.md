@@ -39,6 +39,8 @@ https://github.com/Dimolade/CTREngine-N3DS
 CMS, standing for C++ made Sharp is the Programming Language of CTREngine.
 Its syntax aims to be very similar to C#.
 
+More documentation: https://dimolade-cmsdocs.tiiny.site
+
 #### Hello, World!
 
 ```csharp

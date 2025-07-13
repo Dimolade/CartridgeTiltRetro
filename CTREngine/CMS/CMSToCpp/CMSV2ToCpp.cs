@@ -248,6 +248,7 @@ namespace CMS
         public List<string> includeList = new List<string>();
         public List<CMSV2Conversion> converted;
         public string fileName;
+        bool nextIsList = false;
         int run = 0; //run 0 is symbol collection, run 1 is actual conversion
 
         public void DoSymbolRun(string buildDir)
@@ -409,6 +410,10 @@ namespace CMS
 
                 case "Coroutine":
                     HandleCoroutine();
+                break;
+
+                case "List":
+                    HandleList();
                 break;
 
                 case "}":
@@ -839,6 +844,13 @@ namespace CMS
             currentCpp += "\ngoto " + pointName + ";";
         }
 
+        void HandleList()
+        {
+            currentIndex++; // Go from List to next
+            nextIsList = true;
+            handleReturner();
+        }
+
         void HandleCoroutine()
         {
             currentIndex++;
@@ -1142,7 +1154,7 @@ namespace CMS
             currentIndex++;
             isFunc = getCurrentToken() == "(";
 
-            currentCpp += ((addBeforeVariable != "" && !inFunction) ? addBeforeVariable + " " : "") + (isFunc ? "inline " : "") + returnType;
+            currentCpp += ((addBeforeVariable != "" && !inFunction) ? addBeforeVariable + " " : "") + (isFunc ? "inline " : "") + (nextIsList ? "List<" : "") + returnType + (nextIsList ? ">" : "");
             currentCpp += " " + varName;
             Console.WriteLine("Created \"" + varName + "\" of Type \"" + returnType + "\"");
             if (!isFunc)

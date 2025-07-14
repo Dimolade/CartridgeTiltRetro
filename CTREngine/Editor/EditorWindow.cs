@@ -363,7 +363,7 @@ namespace CTR
             {
                 if (so.assetType == AssetType.Script)
                 {
-                    cr += "#include \"CMS/"+so.asset.name+".hpp\"\n";
+                    cr += "#include \"CMS/" + so.asset.name + ".hpp\"\n";
                 }
             }
             return cr;
@@ -386,12 +386,12 @@ namespace CTR
                     Vector3 s = (Vector3)current.OP.Props[6].currentValue;
                     Color c = (Color)current.OP.Props[9].currentValue;
                     bool instaload = (bool)current.OP.Props[3].currentValue;
-                    currentc += "new CTRImage(\""+storageprefix+imageprefix+current.asset.name+"."+imageExtension+"\","+show.ToString().ToLower()+","+los.ToString().ToLower()+","+
-                    "{"+p.x.ToString()+","+p.y.ToString()+","+p.z.ToString()+"}"+
-                    ","+"{"+s.x+","+s.y+","+s.z+"}"+
-                    ","+"{"+r.x+","+r.y+","+r.z+"}"+
-                    ",\""+current.name+"\",\""+current.Namespace+"\","+instaload.ToString().ToLower()+
-                    ","+"{"+c.r+","+c.g+","+c.b+","+c.a+","+c.blend+"}"+","+Convert.ToInt32(current.OP.Props[2].currentValue)+
+                    currentc += "new CTRImage(\"" + storageprefix + imageprefix + current.asset.name + "." + imageExtension + "\"," + show.ToString().ToLower() + "," + los.ToString().ToLower() + "," +
+                    "{" + p.x.ToString() + "," + p.y.ToString() + "," + p.z.ToString() + "}" +
+                    "," + "{" + s.x + "," + s.y + "," + s.z + "}" +
+                    "," + "{" + r.x + "," + r.y + "," + r.z + "}" +
+                    ",\"" + current.name + "\",\"" + current.Namespace + "\"," + instaload.ToString().ToLower() +
+                    "," + "{" + c.r + "," + c.g + "," + c.b + "," + c.a + "," + c.blend + "}" + "," + Convert.ToInt32(current.OP.Props[2].currentValue) +
                     ")";
                 }
                 else if (currentScene[i].assetType == AssetType.ImageFont)
@@ -404,39 +404,39 @@ namespace CTR
                     string t = (string)current.OP.Props[9].currentValue;
                     Color c = (Color)current.OP.Props[10].currentValue;
                     bool instaload = (bool)current.OP.Props[3].currentValue;
-                    currentc += "new CTRImageFont(\""+storageprefix+imageprefix+current.asset.name+"."+imageExtension+"\","+show.ToString().ToLower()+","+los.ToString().ToLower()+","+
-                    "{"+p.x.ToString()+","+p.y.ToString()+","+p.z.ToString()+"}"+
-                    ","+"{"+s.x+","+s.y+","+s.z+"}"+
-                    ","+"{"+r.x+","+r.y+","+r.z+"}"+
-                    ",\""+current.name+"\",\""+current.Namespace+"\","+instaload.ToString().ToLower()+
-                    ","+"{"+c.r+","+c.g+","+c.b+","+c.a+","+c.blend+"}"+","+Convert.ToInt32(current.OP.Props[2].currentValue)+
-                    ",\""+t+"\""+
+                    currentc += "new CTRImageFont(\"" + storageprefix + imageprefix + current.asset.name + "." + imageExtension + "\"," + show.ToString().ToLower() + "," + los.ToString().ToLower() + "," +
+                    "{" + p.x.ToString() + "," + p.y.ToString() + "," + p.z.ToString() + "}" +
+                    "," + "{" + s.x + "," + s.y + "," + s.z + "}" +
+                    "," + "{" + r.x + "," + r.y + "," + r.z + "}" +
+                    ",\"" + current.name + "\",\"" + current.Namespace + "\"," + instaload.ToString().ToLower() +
+                    "," + "{" + c.r + "," + c.g + "," + c.b + "," + c.a + "," + c.blend + "}" + "," + Convert.ToInt32(current.OP.Props[2].currentValue) +
+                    ",\"" + t + "\"" +
                     ")";
                 }
                 else if (currentScene[i].assetType == AssetType.Script)
                 {
                     bool instaload = (bool)current.OP.Props[3].currentValue;
-                    currentc += "new GameAsset(Enums::AssetType::Script, \""+current.asset.name+"\","+instaload.ToString().ToLower()+",\""+current.name+"\",\""+current.Namespace+"\","+
-                    Convert.ToInt32(current.OP.Props[2].currentValue)+
+                    currentc += "new GameAsset(Enums::AssetType::Script, \"" + current.asset.name + "\"," + instaload.ToString().ToLower() + ",\"" + current.name + "\",\"" + current.Namespace + "\"," +
+                    Convert.ToInt32(current.OP.Props[2].currentValue) +
                     ")";
                 }
                 else if (currentScene[i].assetType == AssetType.Sound)
                 {
                     bool pOL = (bool)current.OP.Props[4].currentValue;
                     bool instaload = (bool)current.OP.Props[3].currentValue;
-                    currentc += "new CTRSound(\""+
-                    current.name+"\",\""+
-                    current.Namespace+"\",\""+storageprefix+soundprefix+current.asset.name+"."+defaultSoundType+"\","+Convert.ToInt32(current.OP.Props[2].currentValue)+","+
-                    instaload.ToString().ToLower()+","+
-                    pOL.ToString().ToLower()+")";
+                    currentc += "new CTRSound(\"" +
+                    current.name + "\",\"" +
+                    current.Namespace + "\",\"" + storageprefix + soundprefix + current.asset.name + "." + defaultSoundType + "\"," + Convert.ToInt32(current.OP.Props[2].currentValue) + "," +
+                    instaload.ToString().ToLower() + "," +
+                    pOL.ToString().ToLower() + ")";
                 }
 
-                if (i+1 != currentScene.Count)
+                if (i + 1 != currentScene.Count)
                 {
-                    currentc+=",\n";
+                    currentc += ",\n";
                 }
             }
-            currentc+="\n};\n};";
+            currentc += "\n};\n};";
             return currentc;
         }
         public static List<Asset> GetAllAssets(Project p, AssetSortType ast = AssetSortType.Name)
@@ -469,9 +469,56 @@ namespace CTR
             return currentAssetList;
         }
 
+        public static List<Asset> GetAllAssetsInFolder(Project p, string path, AssetSortType ast = AssetSortType.Name)
+        {
+            List<Asset> currentAssetList = new List<Asset>();
+            foreach (string file in GetAllFilesInDirectory(path))
+            {
+                currentAssetList.Add(new Asset(file));
+            }
+
+            // Sorting the list based on the specified sorting type
+            switch (ast)
+            {
+                case AssetSortType.Name:
+                    currentAssetList = currentAssetList.OrderBy(asset => asset.name).ToList();
+                    break;
+
+                case AssetSortType.AssetType:
+                    currentAssetList = currentAssetList.OrderBy(asset => asset.GetAssetType()).ToList();
+                    break;
+
+                case AssetSortType.Both:
+                    currentAssetList = currentAssetList
+                        .OrderBy(asset => asset.GetAssetType())
+                        .ThenBy(asset => asset.name)
+                        .ToList();
+                    break;
+            }
+
+            return currentAssetList;
+        }
+
+        public static string[] GetAllFilesInDirectory(string directoryPath)
+        {
+            return Directory.GetFiles(directoryPath, "*.*", SearchOption.TopDirectoryOnly);
+        }
+
+        public static string[] GetAllFoldersInDirectory(string directoryPath)
+        {
+            return Directory.GetDirectories(directoryPath, "*", SearchOption.TopDirectoryOnly);
+        }
+
         public static string[] GetAllFiles(string directoryPath)
         {
             return Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories);
+        }
+
+        public static bool CompareFolders(string a, string b)
+        {
+            string normalizedA = Path.GetFullPath(a.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            string normalizedB = Path.GetFullPath(b.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            return string.Equals(normalizedA, normalizedB, StringComparison.OrdinalIgnoreCase);
         }
     }
     public class GridLayout : Panel
@@ -580,21 +627,31 @@ namespace CTR
         public TextBox namespaceBox;
         public Button okButton;
         public Button cancelButton;
-        public Asset ass;
+        public Asset ass = null;
         public bool aceepted = false;
 
-        public NewObjectDialog(string title, Project p)
+        public NewObjectDialog(string title, Project p, string defaultAssetPath = "null")
         {
             Title = title;
 
             List<string> names = new List<string>();
+            int thisIndex = 0;
+            int i = 0;
 
             foreach (Asset a in EditorTools.GetAllAssets(p))
             {
+                if (a.path == defaultAssetPath)
+                {
+                    ass = a;
+                    int ni = i;
+                    thisIndex = ni;
+                }
+
                 names.Add(a.name);
+                i++;
             }
 
-            dropdown = new DropDown { DataStore = names, SelectedIndex = 0 };
+            dropdown = new DropDown { DataStore = names, SelectedIndex = thisIndex };
             TypeDropdown = new DropDown { DataStore = Enum.GetNames(typeof(AssetType)), SelectedIndex = 0 };
             inputBox = new TextBox();
             namespaceBox = new TextBox();
@@ -625,9 +682,9 @@ namespace CTR
             Content = layout;
         }
 
-        public static NewObjectDialog ShowDialog(Control parent, string title, Project p)
+        public static NewObjectDialog ShowDialog(Control parent, string title, Project p, string pa = "")
         {
-            var dialog = new NewObjectDialog(title, p);
+            var dialog = new NewObjectDialog(title, p, pa);
             dialog.ShowModal(parent);
             return dialog;
         }
@@ -1027,16 +1084,79 @@ namespace CTR
             }
             Hierarchy.ItemImageBinding = CreateImageBinding();
         }
+        public string currentFileExplorerFolder = null;
         public void RefreshFileExplorer(Project p)
         {
+            if (currentFileExplorerFolder == null)
+            {
+                currentFileExplorerFolder = System.IO.Path.Combine(p.path, "Assets/");
+            }
             FileExplorer.ClearItems();
             AssetSortType ast = (AssetSortType)SortType.SelectedIndex;
-            List<Asset> assetList = EditorTools.GetAllAssets(p, ast);
+            List<Asset> assetList = EditorTools.GetAllAssetsInFolder(p, currentFileExplorerFolder, ast);
             List<Control> currentControls = new List<Control>();
             //assetList.Reverse();
+            if (!EditorTools.CompareFolders(System.IO.Path.Combine(p.path, "Assets/"), currentFileExplorerFolder))
+            {
+                var imageView = new ImageView() { Size = new Size(50, 50), Visible = true };
+                imageView.Image = new Bitmap(FileManager.Paths.GetPlatformCompatiblePath("gfx/Folder.png"));
+
+                DirectoryInfo parent = Directory.GetParent(currentFileExplorerFolder);
+
+                StackLayout Holder = new StackLayout
+                {
+                    Width = 85,
+                    Height = 85,
+                    Orientation = Orientation.Vertical,
+                    Items =
+                    {
+                        imageView,
+                        new Label() {Text = ".. ("+parent.Name+")", Font = new Font(SystemFont.Default, 7)}
+                    },
+                    HorizontalContentAlignment = HorizontalAlignment.Center
+                };
+
+                Holder.MouseDown += (sender, e) =>
+                {
+                    if (e.Buttons == MouseButtons.Primary)
+                    {
+                        currentFileExplorerFolder = parent.FullName;
+                        RefreshFileExplorer(p);
+                    }
+                };
+                currentControls.Add(Holder);
+            }
+            foreach (string folder in EditorTools.GetAllFoldersInDirectory(currentFileExplorerFolder))
+            {
+                var imageView = new ImageView() { Size = new Size(50, 50), Visible = true };
+                imageView.Image = new Bitmap(FileManager.Paths.GetPlatformCompatiblePath("gfx/Folder.png"));
+
+                StackLayout Holder = new StackLayout
+                {
+                    Width = 85,
+                    Height = 85,
+                    Orientation = Orientation.Vertical,
+                    Items =
+                    {
+                        imageView,
+                        new Label() {Text = new DirectoryInfo(folder).Name, Font = new Font(SystemFont.Default, 7)}
+                    },
+                    HorizontalContentAlignment = HorizontalAlignment.Center
+                };
+
+                Holder.MouseDown += (sender, e) =>
+                {
+                    if (e.Buttons == MouseButtons.Primary)
+                    {
+                        currentFileExplorerFolder = folder;
+                        RefreshFileExplorer(p);
+                    }
+                };
+                currentControls.Add(Holder);
+            }
             foreach (Asset a in assetList)
             {
-                var imageView = new ImageView() {Size = new Size(50,50), Visible = false};
+                var imageView = new ImageView() { Size = new Size(50, 50), Visible = false };
                 if (GetPreviewForAsset(a) != null)
                 {
                     imageView.Image = GetPreviewForAsset(a);
@@ -1055,13 +1175,23 @@ namespace CTR
                     },
                     HorizontalContentAlignment = HorizontalAlignment.Center
                 };
+
+                Holder.MouseDown += (sender, e) =>
+                {
+                    if (e.Buttons == MouseButtons.Primary)
+                    {
+                        var data = new DataObject();
+                        data.Text = (a.path);
+                        Holder.DoDragDrop(data, DragEffects.Copy);
+                    }
+                };
                 currentControls.Add(Holder);
             }
             FileExplorer.SetItems(currentControls);
         }
-        void NewObjectVoid(Project p)
+        void NewObjectVoid(Project p, string path = "")
         {
-            var result = NewObjectDialog.ShowDialog(this, "Create New Object", p);
+            var result = NewObjectDialog.ShowDialog(this, "Create New Object", p, path);
             if (result.aceepted == false)
                 return;
             
@@ -1135,6 +1265,28 @@ namespace CTR
             // FileExplorer
 
             FileExplorer = new GridLayout(3, 300, y - 50, new Size(15, 15), new Padding(15)); // 3 columns
+            FileExplorer.AllowDrop = true;
+
+            FileExplorer.DragEnter += (sender, e) =>
+            {
+                if (e.Data.ContainsUris)
+                    e.Effects = DragEffects.Copy;
+                else
+                    e.Effects = DragEffects.None;
+            };
+
+            FileExplorer.DragDrop += (sender, e) =>
+            {
+                if (e.Data.ContainsUris)
+                {
+                    var files = e.Data.Uris;
+                    foreach (var file in files)
+                    {
+                        System.IO.File.Copy(file.AbsolutePath, Path.Combine(p.path, "Assets/" + Path.GetFileName(file.AbsolutePath)));
+                    }
+                    RefreshFileExplorer(p);
+                }
+            };
 
             Label explorerTitle = new Label { Text = "Asset Explorer", Font = new Font(FontFamilies.Sans, 18, FontStyle.Bold) };
 
@@ -1181,7 +1333,42 @@ namespace CTR
             Hierarchy = new ListBox
             {
                 Width = 300,
-                Height = y - 50
+                Height = y - 50,
+                AllowDrop = true
+            };
+
+            Hierarchy.DragEnter += (sender, e) =>
+            {
+                if (e.Data.ContainsText && System.IO.File.Exists(e.Data.Text))
+                {
+                    e.Effects = DragEffects.Copy;
+                }
+                else
+                {
+                    e.Effects = DragEffects.None;
+                }
+            };
+
+            Hierarchy.DragDrop += (sender, e) =>
+            {
+                if (e.Data.ContainsText && System.IO.File.Exists(e.Data.Text))
+                {
+                    // Make it make an Empty Object
+                    bool exists = false;
+                    foreach (Asset a in EditorTools.GetAllAssets(p))
+                    {
+                        if (a.path == e.Data.Text)
+                        {
+                            exists = true;
+                        }
+                    }
+                    if (!exists)
+                    {
+                        System.IO.File.Copy(e.Data.Text, Path.Combine(p.path, "Assets/" + Path.GetFileName(e.Data.Text)));
+                        e.Data.Text = Path.Combine(p.path, "Assets/" + Path.GetFileName(e.Data.Text));
+                    }
+                    NewObjectVoid(p, e.Data.Text);
+                }
             };
 
             ListBoxUtils.MakeListBoxReorderable(Hierarchy);

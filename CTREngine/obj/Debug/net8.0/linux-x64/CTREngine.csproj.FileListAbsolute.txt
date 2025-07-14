@@ -555,3 +555,4 @@
 /home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/bin/Debug/net8.0/linux-x64/ClangSharp.dll
 /home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/bin/Debug/net8.0/linux-x64/CppAst.dll
 /home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/bin/Debug/net8.0/linux-x64/Microsoft.Bcl.HashCode.dll
+/home/deck/Documents/CTREngine/CartridgeTiltRetro/CTREngine/bin/Debug/net8.0/linux-x64/gfx/Folder.png

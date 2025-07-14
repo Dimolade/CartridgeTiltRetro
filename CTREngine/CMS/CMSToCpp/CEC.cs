@@ -263,8 +263,10 @@ public static class CEC
 
         Console.WriteLine("Parsing C++ Headers from source...");
         curC.InitReturnTypes();
-
+        // CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/"
         string translationFile = Path.Combine(buildDir, "TRANSLATOR.cmsv2t");
+        if (!File.Exists(translationFile)) translationFile = Path.Combine((CTR.FileManager.Paths.GetCTRPath() + "/DefaultBuild/"), "TRANSLATOR.cmsv2t");
+
         Console.WriteLine("Checking for Translation file: " + translationFile);
         if (File.Exists(translationFile))
         {

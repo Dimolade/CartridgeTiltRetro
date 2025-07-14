@@ -1282,7 +1282,7 @@ namespace CTR
                     var files = e.Data.Uris;
                     foreach (var file in files)
                     {
-                        System.IO.File.Copy(file.AbsolutePath, Path.Combine(p.path, "Assets/" + Path.GetFileName(file.AbsolutePath)));
+                        System.IO.File.Copy(file.AbsolutePath, Path.Combine(currentFileExplorerFolder, Path.GetFileName(file.AbsolutePath)));
                     }
                     RefreshFileExplorer(p);
                 }
@@ -1364,8 +1364,8 @@ namespace CTR
                     }
                     if (!exists)
                     {
-                        System.IO.File.Copy(e.Data.Text, Path.Combine(p.path, "Assets/" + Path.GetFileName(e.Data.Text)));
-                        e.Data.Text = Path.Combine(p.path, "Assets/" + Path.GetFileName(e.Data.Text));
+                        System.IO.File.Copy(e.Data.Text, Path.Combine(currentFileExplorerFolder, Path.GetFileName(e.Data.Text)));
+                        e.Data.Text = Path.Combine(currentFileExplorerFolder, Path.GetFileName(e.Data.Text));
                     }
                     NewObjectVoid(p, e.Data.Text);
                 }

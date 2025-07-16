@@ -200,6 +200,7 @@ namespace CTR.Window
                 {
                     listBox.SelectedIndex = 0;
                 }
+                ClearList();
             };
             buttonPanel.Items.Add(removeButton);
 

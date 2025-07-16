@@ -1684,6 +1684,12 @@ namespace CTR
             ClientSize = new Size(300, 200);
 
             List<string> names = new List<string>();
+            if (CTR.FileManager.Platforms.GetPlatforms().Count == 0)
+            {
+                choseYes = false;
+                MessageBox.Show("Please have atleast 1 Platform to use this Feature.");
+                Close();
+            }
             foreach (CTR.Platform p in CTR.FileManager.Platforms.GetPlatforms())
             {
                 names.Add(p.name);

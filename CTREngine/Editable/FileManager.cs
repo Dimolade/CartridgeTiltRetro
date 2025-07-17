@@ -73,7 +73,7 @@ namespace CTR.FileManager
             CTR.Platform p = JsonConvert.DeserializeObject<CTR.Platform>(File.ReadAllText(path));
             Console.WriteLine("Install Path: " + p.installPath);
             Console.WriteLine("Exists? " + Directory.Exists(p.installPath));
-            if (!Directory.Exists(p.installPath))
+            if (!Directory.Exists(p.installPath) || !Directory.Exists(p.DN.Path))
             {
                 MessageBox.Show("This Platform file is corrupted, repairing.");
             corrupted:
@@ -87,6 +87,7 @@ namespace CTR.FileManager
                         goto corrupted;
                     }
                     p.installPath = dir;
+                    p.DN.Path = Path.Combine(dir, "dotnet/");
                     File.WriteAllText(path, Newtonsoft.Json.JsonConvert.SerializeObject(p));
                 }
             }

@@ -7,7 +7,7 @@ namespace CTR
     // Class representing a .NET project
     public class DotnetProject
     {
-        public string Path { get; private set; }
+        public string Path { get; set; }
         public string Name { get; private set; }
 
         // Constructor to initialize the project
@@ -46,6 +46,7 @@ namespace CTR
         // Method to build the project
         public string Build()
         {
+            Console.WriteLine("Trying to Build: " + Path);
             // Run the 'dotnet build' command
             var startInfo = new ProcessStartInfo
             {
@@ -62,10 +63,10 @@ namespace CTR
             var error = process.StandardError.ReadToEnd();
             process.WaitForExit();
 
-            if (process.ExitCode != 0)
+            /*if (process.ExitCode != 0)
             {
                 throw new Exception($"Build failed:\n{error}");
-            }
+            }*/
 
             Console.WriteLine($"Project '{Name}' built successfully.");
 

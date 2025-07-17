@@ -602,6 +602,11 @@ namespace CMS
                 {
                     return TryTranslate(thisToken);
                 }
+                else if (Tokens.Count <= currentIndex) // Length: 500 index: 499
+                {
+                    CancelEarly(new ErrorReason("Error: ", "Tried accessing a token beyond limit.", currentIndex));
+                    return "";
+                }
                 else if (thisToken.StartsWith(var.name + ".") && Tokens[currentIndex + 1] != "(")
                 {
                     string acc = "";
@@ -617,7 +622,7 @@ namespace CMS
                     if (fixAccess(var, thisToken, out acc))
                     {
                         Tokens[currentIndex] = acc;
-                        return handleFunctionOption(false,false);
+                        return handleFunctionOption(false, false);
                     }
                 }
             }
@@ -1478,6 +1483,25 @@ namespace CMS
             return toTrans;
         }
 
+        int CountParenthesisBeforeSemicolon(List<string> tokens, int startIndex)
+        {
+            int openParens = 0;
+            int closeParens = 0;
+
+            for (int i = startIndex; i < tokens.Count; i++)
+            {
+                string tok = tokens[i];
+
+                if (tok == ";")
+                    break;
+
+                if (tok == "(") openParens++;
+                else if (tok == ")") closeParens++;
+            }
+
+            return closeParens;
+        }
+
         string handleFunctionOption(bool useS = true, bool app = true)
         {
             Console.WriteLine("Handling a Function Call");
@@ -1490,6 +1514,7 @@ namespace CMS
                 //currentCpp += "(";
                 f += "("; // (i == 0) "MakeLetter("
                 currentIndex++; // on First: Vector3
+
                 int i = 0;
                 while (getCurrentToken() != ")")
                 {
@@ -1509,7 +1534,12 @@ namespace CMS
                     }
                     while (getCurrentToken() != "," && getCurrentToken() != ")")
                     {
-                        f += HandlePossbileReturnerArgs(getCurrentToken());
+                        string ender = HandlePossbileReturnerArgs(getCurrentToken());
+                        if (ender.EndsWith("))")) {ender = ender.Remove(ender.Length - 2); currentIndex--; }
+                        //if (ender.EndsWith(")") && Tokens[currentIndex + 1] == ")" && useS && app) { currentIndex++; goto skip; }
+                        Console.WriteLine("Function Parameter Arg ender: " + ender);
+                        Console.WriteLine("Next Token: " + Tokens[currentIndex + 1]);
+                        f += ender;
                         if (getCurrentToken() != "," && getCurrentToken() != ")") f += " ";
                         if (getCurrentToken() != "," && getCurrentToken() != ")")
                         {
@@ -1519,6 +1549,7 @@ namespace CMS
                     }
                     i++;
                 }
+                skip:
                 if (cancel) return f;
                 f += ")";
                 currentIndex++;

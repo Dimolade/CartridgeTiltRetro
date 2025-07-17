@@ -39,12 +39,16 @@ CTRSound* Scene.GetCTRSound
 CTRSound* Scene::GetCTRSound
 void Scene.AddSceneObject
 void Scene::AddSceneObject
+void Scene.AddCamera
+void Scene::AddCamera
 CTRImage* Scene.CTRImage
 CTRImage* Scene::ConstCTRImage
 CTRSound* Scene.CTRSound
 CTRSound* Scene::ConstCTRSound
 CTRImageFont* Scene.CTRImageFont
 CTRImageFont* Scene::ConstCTRImageFont
+CTRCamera* Scene.CTRCamera
+CTRCamera* Scene::ConstCTRCamera
 RNG Random
 RNG RNG
 Vector3 Vector3
@@ -100,7 +104,9 @@ void Mouse::UpdateMouse
 Vector2 Input.Mouse.position
 Vector2 Mouse::position
 Vector2 Input.Mouse.screen
-Vector2 Mouse::screen";
+Vector2 Mouse::screen
+CTRScissor CTRScissor
+CTRScissor CTRScissor";
 		public static void Init()
 		{
 			string path = Path.Combine(Paths.GetCTRPath(), "DefaultBuild/");

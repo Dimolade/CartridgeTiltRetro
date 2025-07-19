@@ -210,7 +210,7 @@ public static class Builder
             int i = 0;
             foreach (CMS.CMSV2ConversionResult res in br.CMSV2CR)
             {
-                File.WriteAllText(targetPath + anames[i] + ".hpp", res.Cpp);
+                File.WriteAllText(targetPath + Path.GetFileNameWithoutExtension(ps[i]) + ".hpp", res.Cpp);
                 i++;
             }
 

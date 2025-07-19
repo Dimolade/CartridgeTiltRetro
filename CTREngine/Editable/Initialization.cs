@@ -106,7 +106,11 @@ Vector2 Mouse::position
 Vector2 Input.Mouse.screen
 Vector2 Mouse::screen
 CTRScissor CTRScissor
-CTRScissor CTRScissor";
+CTRScissor CTRScissor
+float Math.Sine
+float Math::Sine
+float Math.Cosine
+float Math::Cosine";
 		public static void Init()
 		{
 			string path = Path.Combine(Paths.GetCTRPath(), "DefaultBuild/");

@@ -49,15 +49,17 @@ namespace CMS
         private string CoolTokenShow()
         {
             string cur = "";
-            if (tokenIndex >= 2)
+            if (tokenIndex >= 2 && tokenIndex - 2 <= 0)
             {
                 cur += Tokens[tokenIndex - 2] + " ";
             }
-            if (tokenIndex >= 1)
+            if (tokenIndex >= 1 && tokenIndex - 1 <= 0)
             {
                 cur += Tokens[tokenIndex - 1] + " ";
             }
-            cur += ">>" + Tokens[tokenIndex] + "<< ";
+            cur += tokenIndex >= 0 && tokenIndex < Tokens.Count
+            ? $">>{Tokens[tokenIndex]}<< "
+            : ">>???<< ";
             if (Tokens.Count > tokenIndex + 2)
             {
                 cur += Tokens[tokenIndex + 1]+ " ";
@@ -102,6 +104,18 @@ namespace CMS
                 }
 
                 cur += Cpp + " <<<< HERE";
+            }
+            return cur;
+        }
+
+        public string TokenCapture()
+        {
+            string cur = "Captured Tokens:\n";
+            int i = 0;
+            foreach (string Token in conversion.Tokens)
+            {
+                cur += "Token " + i + ":" + "\"" + Token + "\"\n";
+                i++;
             }
             return cur;
         }
@@ -194,7 +208,8 @@ namespace CMS
         Private,
         Public,
         Protected,
-        Override
+        Override,
+        Overrideable
     }
 
     public class CMSV2Var
@@ -292,6 +307,8 @@ namespace CMS
                 result.failed = true;
                 result.whyFailed = curError;
                 Console.WriteLine("Conversion Failed, Tried C++:\n"+currentCpp);
+                result.conversion = this;
+                Console.WriteLine(result.TokenCapture());
             }
             result.conversion = this;
 
@@ -338,6 +355,9 @@ namespace CMS
                     break;
                 case "override":
                     currentAdds.Add(TokenAdditives.Override);
+                    break;
+                case "overrideable":
+                    currentAdds.Add(TokenAdditives.Overrideable);
                     break;
                 case "public":
                     currentAdds.Add(TokenAdditives.Public);
@@ -414,6 +434,10 @@ namespace CMS
 
                 case "List":
                     HandleList();
+                break;
+
+                case "enum":
+                    HandleEnum();
                 break;
 
                 case "}":
@@ -851,7 +875,8 @@ namespace CMS
 
         void HandleList()
         {
-            currentIndex++; // Go from List to next
+            currentIndex++; // Go from List to <
+            currentIndex++; // go from "<" to next
             nextIsList = true;
             handleReturner();
         }
@@ -913,6 +938,67 @@ namespace CMS
             }
             curb += "); });\n"; // currentToken should always be ";" here.
             currentCpp += curb;
+        }
+
+        void HandleEnum()
+        {
+            currentIndex++; // Skip over "enum"
+            string name = getCurrentToken();
+            currentIndex++;
+            if (getCurrentToken() != "{") { CancelEarly(new ErrorReason("Error: ", "Syntax Error in Enum.", currentIndex)); return; }
+            currentIndex++; // skip the {
+            bool isFirst = true;
+            List<string> Options = new List<string>();
+            List<string> Values = new List<string>();
+            int i = 0;
+            while (getCurrentToken() != "}")
+            {
+                if (!isFirst)
+                {
+                    if (getCurrentToken() != ",")
+                    {
+                        CancelEarly(new ErrorReason("Error: ", "Syntax Error in Enum.", currentIndex)); return;
+                    }
+                    currentIndex++; // skip over ","
+                }
+                string option = getCurrentToken();
+                currentIndex++;
+                Options.Add(option);
+                isFirst = false;
+                if (getCurrentToken() == "=")
+                {
+                    currentIndex++; // skip over "="
+                    Values.Add(getCurrentToken());
+                    currentIndex++; // skip over number
+                }
+                else
+                {
+                    Values.Add(i.ToString());
+                }
+                i++;
+            }
+
+            string full = "\nenum " + name + " {\n";
+
+            for (i = 0; i < Options.Count; i++)
+            {
+                full += Options[i] + " = " + Values[i];
+                if (i + 1 < Options.Count) // isnt the last
+                {
+                    full += ",\n";
+                }
+
+                if (run == 1)
+                {
+                    currentCEC.cppExpressions.Add(Options[i]);
+                    currentCEC.cmsv2Expression.Add(name + "." + Options[i]);
+                }
+            }
+
+            currentAdds.Clear();
+
+            full += "\n};";
+            currentCpp += full;
         }
 
         void HandleClass()
@@ -1114,6 +1200,7 @@ namespace CMS
 
         void HandleClassClose()
         {
+            if (currentClass == null) { CancelEarly(new ErrorReason("Error while Parsing: ","CurrentClass was null while Parsing.", currentIndex)); return; }
             currentCpp += "\npublic:\n" + currentClass.name + "() {}\n";
         }
 
@@ -1135,6 +1222,7 @@ namespace CMS
             string returnType = getCurrentToken();
             bool isFunc = false;
             bool addOV = false;
+            bool isOVAD = currentAdds.Contains(TokenAdditives.Overrideable);
             if (currentAdds.Contains(TokenAdditives.Public))
             {
                 currentCpp += "public:\n";
@@ -1152,6 +1240,7 @@ namespace CMS
                 addOV = true;
             }
             currentIndex++;
+            if (nextIsList) currentIndex++; // skip over closing >
             currentAdds.Clear();
             string varName = getCurrentToken();
             if (run == 0) validSymbols.Add(varName);
@@ -1159,7 +1248,8 @@ namespace CMS
             currentIndex++;
             isFunc = getCurrentToken() == "(";
 
-            currentCpp += ((addBeforeVariable != "" && !inFunction) ? addBeforeVariable + " " : "") + (isFunc ? "inline " : "") + (nextIsList ? "List<" : "") + returnType + (nextIsList ? ">" : "");
+            currentCpp += ((addBeforeVariable != "" && !inFunction) ? addBeforeVariable + " " : "") + (isFunc ? "inline " : "") + ( isOVAD ? "virtual " : "" ) + (nextIsList ? "List<" : "") + returnType + (nextIsList ? ">" : "");
+            nextIsList = false;
             currentCpp += " " + varName;
             Console.WriteLine("Created \"" + varName + "\" of Type \"" + returnType + "\"");
             if (!isFunc)

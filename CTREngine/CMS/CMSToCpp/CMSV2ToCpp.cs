@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace CMS
 {
@@ -141,12 +142,21 @@ namespace CMS
             }
 
             List<string> symbols = new List<string>();
+            List<string> validReturnType = new List<string>();
             List<CMSV2Var> globalVar = new List<CMSV2Var>();
 
             foreach (CMSV2Conversion cms in CMSV2C)
             {
                 globalVar.AddRange(cms.globalVar);
+                validReturnType.AddRange(cms.currentCEC.validReturnType);
                 symbols.AddRange(cms.validSymbols);
+            }
+
+            validReturnType = validReturnType.Distinct().OrderBy(n => n).ToList();
+
+            foreach (string vrt in validReturnType)
+            {
+                Console.WriteLine("Valid Return Type: " + vrt);
             }
 
             foreach (CMSV2Conversion cms in CMSV2C)
@@ -154,6 +164,7 @@ namespace CMS
                 cms.globalVar = globalVar;
                 cms.validSymbols = symbols;
                 cms.converted = CMSV2C;
+                cms.currentCEC.validReturnType = validReturnType;
                 CMSV2CR.Add(cms.StartJob(buildDir));
             }
         }
@@ -292,7 +303,6 @@ namespace CMS
             run = 1;
             currentCpp = "#include \"CTR/AutoIncludes.h\"\nusing namespace std;";
             currentAdds = new List<TokenAdditives>();
-            currentCEC = CEC.FromSource(buildDir);
 
             result = new CMSV2ConversionResult();
 
@@ -467,7 +477,8 @@ namespace CMS
                     bool canc = true;
                     foreach (string rType in currentCEC.validReturnType)
                     {
-                        if (thisToken == rType && inClass)
+                        if (run != 0) Console.WriteLine("Possible RTypes: "+rType);
+                        if (thisToken == rType || thisToken == rType+"*" && inClass)
                         {
                             Console.WriteLine("Detected Returner");
                             canc = false;
@@ -573,7 +584,7 @@ namespace CMS
                         }
                         foreach (string sym in validSymbols)
                         {
-                            if (thisToken == sym)
+                            if (thisToken == sym || thisToken.StartsWith(sym))
                             {
                                 handleVarOrFunc();
                                 canc = false;
@@ -1014,7 +1025,6 @@ namespace CMS
             CMSV2Class cl = new CMSV2Class(name, new List<string>() {});
             cl.name = name;
             result.classes.Add(cl);
-            currentCEC.validReturnType.Add(name);
             Console.WriteLine("Made Class");
             currentClassVar.Add(new CMSV2Var(name, name));
             globalVar.Add(new CMSV2Var(name, name));
@@ -1168,7 +1178,8 @@ namespace CMS
             int startbodies = bodiesToClose;
             currentIndex++;
             currentClass = cl;
-            if (run == 0) validSymbols.Add(cl.name);
+            if (run == 0) currentCEC.validReturnType.Add(cl.name);
+            //if (run == 0) validSymbols.Add(cl.name);
             if (run == 0) classNames.Add(cl.name);
             while (startbodies <= bodiesToClose) // startbodies = 1; bodiesToClose = 1;
             {

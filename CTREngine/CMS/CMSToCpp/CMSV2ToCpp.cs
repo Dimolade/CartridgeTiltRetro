@@ -143,6 +143,8 @@ namespace CMS
 
             List<string> symbols = new List<string>();
             List<string> validReturnType = new List<string>();
+            List<string> cmsv2t = new List<string>();
+            List<string> cppt = new List<string>();
             List<CMSV2Var> globalVar = new List<CMSV2Var>();
 
             foreach (CMSV2Conversion cms in CMSV2C)
@@ -150,9 +152,13 @@ namespace CMS
                 globalVar.AddRange(cms.globalVar);
                 validReturnType.AddRange(cms.currentCEC.validReturnType);
                 symbols.AddRange(cms.validSymbols);
+                cmsv2t.AddRange(cms.currentCEC.cmsv2Expression);
+                cppt.AddRange(cms.currentCEC.cppExpressions);
             }
 
             validReturnType = validReturnType.Distinct().OrderBy(n => n).ToList();
+            cmsv2t = cmsv2t.Distinct().OrderBy(n => n).ToList();
+            cppt = cppt.Distinct().OrderBy(n => n).ToList();
 
             foreach (string vrt in validReturnType)
             {
@@ -165,6 +171,8 @@ namespace CMS
                 cms.validSymbols = symbols;
                 cms.converted = CMSV2C;
                 cms.currentCEC.validReturnType = validReturnType;
+                cms.currentCEC.cppExpressions = cppt;
+                cms.currentCEC.cmsv2Expression = cmsv2t;
                 CMSV2CR.Add(cms.StartJob(buildDir));
             }
         }

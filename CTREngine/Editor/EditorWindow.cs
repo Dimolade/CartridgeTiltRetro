@@ -363,7 +363,7 @@ namespace CTR
             {
                 if (so.assetType == AssetType.Script)
                 {
-                    cr += "#include \"CMS/" + so.asset.name + ".hpp\"\n";
+                    cr += "#include \"CMS/" + Path.GetFileNameWithoutExtension(so.asset.path) + ".hpp\"\n";
                 }
             }
             return cr;

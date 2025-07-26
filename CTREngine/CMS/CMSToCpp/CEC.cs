@@ -36,6 +36,7 @@ public class CppExpressionConverter
         {
             if (cmsv2Expression[i] == CMSV2Exp)
             {
+                Console.WriteLine("DIMOCEC39 ## ConvertCMSv2ToCpp from: " + CMSV2Exp + " to " + cppExpressions[i] + " and index is: " + i);
                 return cppExpressions[i];
             }
         }

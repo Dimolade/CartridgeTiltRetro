@@ -110,7 +110,9 @@ CTRScissor CTRScissor
 float Math.Sine
 float Math::Sine
 float Math.Cosine
-float Math::Cosine";
+float Math::Cosine
+float Math.Abs
+float Math::Abs";
 		public static void Init()
 		{
 			string path = Path.Combine(Paths.GetCTRPath(), "DefaultBuild/");

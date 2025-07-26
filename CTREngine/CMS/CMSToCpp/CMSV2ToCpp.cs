@@ -132,10 +132,13 @@ namespace CMS
         public void StartJob(string buildDir)
         {
             int i = 0;
+            CppExpressionConverter cec = CEC.FromSource(buildDir);
+            int origLength = cec.cmsv2Expression.Count;
             foreach (string c in converts)
             {
                 CMSV2Conversion cc = new CMSV2Conversion(c);
                 cc.fileName = Path.GetFileNameWithoutExtension(paths[i]);
+                cc.currentCEC = cec;
                 cc.DoSymbolRun(buildDir);
                 CMSV2C.Add(cc);
                 i++;
@@ -143,8 +146,8 @@ namespace CMS
 
             List<string> symbols = new List<string>();
             List<string> validReturnType = new List<string>();
-            List<string> cmsv2t = new List<string>();
-            List<string> cppt = new List<string>();
+            /*List<string> cmsv2t = new List<string>();
+            List<string> cppt = new List<string>();*/
             List<CMSV2Var> globalVar = new List<CMSV2Var>();
 
             foreach (CMSV2Conversion cms in CMSV2C)
@@ -152,13 +155,17 @@ namespace CMS
                 globalVar.AddRange(cms.globalVar);
                 validReturnType.AddRange(cms.currentCEC.validReturnType);
                 symbols.AddRange(cms.validSymbols);
-                cmsv2t.AddRange(cms.currentCEC.cmsv2Expression);
-                cppt.AddRange(cms.currentCEC.cppExpressions);
+                /*List<string> rcmsv2t = cms.currentCEC.cmsv2Expression;
+                rcmsv2t.RemoveRange(0, origLength);
+                cmsv2t.AddRange(rcmsv2t);
+                List<string> rccpt = cms.currentCEC.cppExpressions;
+                rccpt.RemoveRange(0, origLength);
+                cppt.AddRange(rccpt);*/
             }
 
             validReturnType = validReturnType.Distinct().OrderBy(n => n).ToList();
-            cmsv2t = cmsv2t.Distinct().OrderBy(n => n).ToList();
-            cppt = cppt.Distinct().OrderBy(n => n).ToList();
+            //cmsv2t = cmsv2t.Distinct().OrderBy(n => n).ToList();
+            //cppt = cppt.Distinct().OrderBy(n => n).ToList();
 
             foreach (string vrt in validReturnType)
             {
@@ -170,9 +177,9 @@ namespace CMS
                 cms.globalVar = globalVar;
                 cms.validSymbols = symbols;
                 cms.converted = CMSV2C;
-                cms.currentCEC.validReturnType = validReturnType;
+                /*cms.currentCEC.validReturnType = validReturnType;
                 cms.currentCEC.cppExpressions = cppt;
-                cms.currentCEC.cmsv2Expression = cmsv2t;
+                cms.currentCEC.cmsv2Expression = cmsv2t;*/
                 CMSV2CR.Add(cms.StartJob(buildDir));
             }
         }
@@ -261,6 +268,7 @@ namespace CMS
         string currentCpp;
         int currentIndex = 0;
         public List<string> Tokens;
+        public List<bool> checkedTokens = new List<bool>();
         bool cancel = false;
         ErrorReason curError;
         List<TokenAdditives> currentAdds;
@@ -274,6 +282,7 @@ namespace CMS
         public CppExpressionConverter currentCEC;
         int bodiesToClose = 0;
         bool inClass = false;
+        bool isClassStatic = false;
         bool inComment = false;
         bool inFunction;
         string addBeforeVariable = "";
@@ -294,7 +303,6 @@ namespace CMS
             // Symbol Run
             result = new CMSV2ConversionResult();
             currentAdds = new List<TokenAdditives>();
-            currentCEC = CEC.FromSource(buildDir);
             IdentifyNextExpression();
         }
 
@@ -309,7 +317,8 @@ namespace CMS
             currentIndex = 0;
             // Actual Run
             run = 1;
-            currentCpp = "#include \"CTR/AutoIncludes.h\"\nusing namespace std;";
+            checkedTokens = new List<bool>();
+            currentCpp = "#pragma once\n\n#include \"CTR/AutoIncludes.h\"\nusing namespace std;";
             currentAdds = new List<TokenAdditives>();
 
             result = new CMSV2ConversionResult();
@@ -444,6 +453,10 @@ namespace CMS
     
                 case "Use":
                     HandleUse();
+                break;
+
+                case "Include":
+                    HandleInclude();
                 break;
 
                 case "Coroutine":
@@ -755,9 +768,13 @@ namespace CMS
             {
                 if (thisToken == expr)
                 {
+                    Tokens[currentIndex] = TryTranslate(thisToken);
+                    Console.WriteLine("Dimo765DL ## Token now is: " + getCurrentToken());
                     if (Tokens[currentIndex + 1] == "(")
                     {
-                        return handleFunctionOption(false, false);
+                        string ss = handleFunctionOption(false, false);
+                        //if (getCurrentToken() == ")" && Tokens[currentIndex - 1] != ")") currentIndex--;
+                        return ss;
                     }
                 }
             }
@@ -777,11 +794,11 @@ namespace CMS
                     if (token == ",")
                     {
                         ts += ", ";
+                        currentIndex++;
+                        if (getCurrentToken() == ")") break;
                     }
-                    else
-                    {
-                        ts += HandlePossbileReturnerArgs(token) + " ";
-                    }
+
+                    ts += HandlePossbileReturnerArgs(getCurrentToken()) + " ";
                     
                     if (getCurrentToken() != ")")
                     {
@@ -789,7 +806,7 @@ namespace CMS
                     }
                     else break;
                 }
-                currentIndex++;
+                //currentIndex++;
                 return ts + " )";
             }
             return TryTranslate(thisToken);
@@ -819,6 +836,27 @@ namespace CMS
             else CancelEarly(new ErrorReason("Error: ", "Syntax Error in Use, Usage: 'Use cmsFileName ;'", currentIndex));
         }
 
+        void HandleInclude()
+        {
+            currentIndex++;
+            string toInclude = getCurrentToken();
+            if (run == 0) includeList.Add(toInclude);
+            if (run == 0) return;
+            foreach (CMSV2Conversion con in converted)
+            {
+                Console.WriteLine("Looking for: " + toInclude + " while including, current is: " + con.fileName);
+                if (con.fileName == toInclude)
+                {
+                    currentCpp += "// Inclusion for CMS: " + toInclude + "\n";
+                    currentCpp += "#include \""+toInclude+".hpp\"\n";
+                    break;
+                }
+            }
+            currentIndex++;
+            if (getCurrentToken() == ";") { AddNLS(); }
+            else CancelEarly(new ErrorReason("Error: ", "Syntax Error in Include, Usage: 'Include cmsFileName ;'", currentIndex));
+        }
+
         void HandleIf()
         {
             // should be "If"
@@ -839,7 +877,10 @@ namespace CMS
                 {
                     break;
                 }
-                currentIndex++;
+                
+                if (currentCpp.EndsWith(getCurrentToken()+" ") == true)
+                    currentIndex++;
+                
                 if (getCurrentToken() == ")")
                 {
                     break;
@@ -1024,7 +1065,8 @@ namespace CMS
         {
             if (currentAdds.Contains(TokenAdditives.Static))
             {
-                addBeforeVariable = "static";
+                //addBeforeVariable = "static";
+                isClassStatic = true;
             }
             currentIndex++;
             string name = getCurrentToken();
@@ -1214,6 +1256,7 @@ namespace CMS
             currentClassFunc.Clear();
             inClass = false;
             addBeforeVariable = "";
+            isClassStatic = false;
             currentClass = null;
         }
 
@@ -1267,10 +1310,10 @@ namespace CMS
             currentIndex++;
             isFunc = getCurrentToken() == "(";
 
-            currentCpp += ((addBeforeVariable != "" && !inFunction) ? addBeforeVariable + " " : "") + (isFunc ? "inline " : "") + ( isOVAD ? "virtual " : "" ) + (nextIsList ? "List<" : "") + returnType + (nextIsList ? ">" : "");
+            currentCpp += ((isClassStatic == true && (!inFunction || isFunc)) ? "static " : "") + ((isFunc || isClassStatic == true) ? "inline " : "") + ( isOVAD ? "virtual " : "" ) + (nextIsList ? "List<" : "") + returnType + (nextIsList ? ">" : "");
             nextIsList = false;
             currentCpp += " " + varName;
-            Console.WriteLine("Created \"" + varName + "\" of Type \"" + returnType + "\"");
+            Console.WriteLine("Created \"" + varName + "\" of Type \"" + returnType + "\""+" in class: "+inClass.ToString()+" isStaticClass?: "+isClassStatic.ToString());
             if (!isFunc)
             {
                 handleVariable();
@@ -1377,6 +1420,7 @@ namespace CMS
                 currentCpp += "}\n";
                 currentIndex--;
             }
+            inFunction = false;
             currentIndex++;
         }
 

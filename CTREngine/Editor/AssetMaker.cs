@@ -15,10 +15,12 @@ namespace CTR
         public int Width;
         public int Height;
 
-        public CTRIFChar(char c, string filePath)
+        public CTRIFChar(char c, string filePath, int w = 0, int h = 0)
         {
             this.c = c;
             this.filePath = filePath;
+            Width = w;
+            Height = h;
         }
     }
     public class CTRIF
@@ -261,6 +263,7 @@ public class CTRIFWindow
         var NewButton = new Button { Text = "New Character...", Width = 300, Height = 45 };
         var RemoveButton = new Button { Text = "Remove Character" };
         var SaveButton = new Button { Text = "Save CTR Image Font as File..." };
+        var AutoButton = new Button { Text = "Auto Generate Image Font..." };
         var imageDisp = new ImageView { Width = 350, Height = 350 };
 
         CTRIF currentIF = new CTRIF();
@@ -277,6 +280,24 @@ public class CTRIFWindow
             if (path != null)
             {
                 File.WriteAllText(path, JsonConvert.SerializeObject(currentIF));
+            }
+        };
+
+        AutoButton.Click += (sender, e) =>
+        {
+            string path = CTR.UIButtons.FolderSelect("Select Folder with Letters", null);
+            if (path != null)
+            {
+                foreach (string f in Directory.GetFiles(path))
+                {
+                    if (f.EndsWith("png"))
+                    {
+                        Bitmap b = new Bitmap(f);
+                        currentIF.Chars.Add(new CTRIFChar(Path.GetFileNameWithoutExtension(f)[0], f, b.Width, b.Height));
+                        b.Dispose();
+                    }
+                }
+                RefreshList();
             }
         };
 
@@ -487,7 +508,7 @@ public class CTRIFWindow
                         {
                             Orientation = Orientation.Vertical,
                             Spacing = 10,
-                            Items = { charName, charBox,charWL,charWidth,charHL,charHeight,imageDisp, imagePath, selectIPButton, SaveButton }
+                            Items = { charName, charBox,charWL,charWidth,charHL,charHeight,imageDisp, imagePath, selectIPButton, SaveButton, AutoButton }
                         }
                     }
                 }
@@ -554,6 +575,8 @@ public class CTRGDWindow
                 File.WriteAllText(path, JsonConvert.SerializeObject(currentGD));
             }
         };
+
+        
 
         void RefreshAll()
         {
@@ -627,7 +650,9 @@ public class CTRGDWindow
                         {
                             Orientation = Orientation.Vertical,
                             Spacing = 10,
-                            Items = { QSL(l1, t1), QSL(l5,t5), QSL(l2,t2),QSL(l3,t3),QSL(l4,t4),new Label {Text = "Remember, CTRGD's should be named GameData.ctrgd and be in Project/Assets/"}, SaveButton }
+                            Items = { QSL(l1, t1), QSL(l5,t5), QSL(l2,t2),QSL(l3,t3),QSL(l4,t4),
+                                new Label {Text = "Remember, CTRGD's should be named GameData.ctrgd and be in Project/Assets/"},
+                                SaveButton }
                         }
                     }
                 }

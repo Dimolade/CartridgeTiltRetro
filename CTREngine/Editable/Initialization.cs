@@ -112,7 +112,11 @@ float Math::Sine
 float Math.Cosine
 float Math::Cosine
 float Math.Abs
-float Math::Abs";
+float Math::Abs
+CTRSaveSystem CTRSaveSystem
+CTRSaveSystem CTRSaveSystem
+string Convert.ToString
+string to_string";
 		public static void Init()
 		{
 			string path = Path.Combine(Paths.GetCTRPath(), "DefaultBuild/");

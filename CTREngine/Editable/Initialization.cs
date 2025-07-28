@@ -39,6 +39,8 @@ CTRSound* Scene.GetCTRSound
 CTRSound* Scene::GetCTRSound
 void Scene.AddSceneObject
 void Scene::AddSceneObject
+void Scene.RemoveSceneObject
+void Scene::RemoveSceneObject
 void Scene.AddCamera
 void Scene::AddCamera
 CTRImage* Scene.CTRImage

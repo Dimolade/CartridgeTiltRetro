@@ -467,6 +467,15 @@ namespace CMS
                     HandleList();
                 break;
 
+                case "Delete":
+                    currentIndex++;
+                    currentCpp += "\n" + "delete " + getCurrentToken();
+                    currentIndex++;
+                    if (getCurrentToken() != ";") CancelEarly(new ErrorReason("Are you kidding me?", "Eat my shorts.", currentIndex));
+                    
+                    currentCpp += ";\n";
+                break;
+
                 case "enum":
                     HandleEnum();
                 break;
@@ -943,14 +952,14 @@ namespace CMS
 
         void HandleCoroutine()
         {
-            currentIndex++;
+            currentIndex++; // skips Coroutine
             string curb = "Coroutiner::CoroutineFunction(";
             string funcName = getCurrentToken();
             currentIndex++;
             List<string> args = new List<string>();
             if (getCurrentToken() == "(")
             {
-                curb += HandlePossibleReturnerArgsWhile(); // frameCount
+                curb += getCurrentToken(); // frameCount
                 currentIndex++;
                 while (getCurrentToken() != ")") // first token after frameCount , (thisToken)
                 {
@@ -976,12 +985,12 @@ namespace CMS
             }
             else
             {
-                curb += HandlePossibleReturnerArgsWhile(); // frameCount
+                curb += getCurrentToken(); // frameCount
                 currentIndex++;
                 if (getCurrentToken() != ";") { new ErrorReason("Error: ", "Expected semicolon, got: " + getCurrentToken(), currentIndex); return; }
             }
 
-            curb += " [";
+            curb += ", [";
             for (int i = 0; i < args.Count; i++)
             {
                 curb += args[i];

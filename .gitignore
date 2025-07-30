@@ -10,6 +10,7 @@
 *.sln.docstates
 LICENSEUP.md
 log.txt
+publish/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

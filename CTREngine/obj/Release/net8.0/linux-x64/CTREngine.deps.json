@@ -9,6 +9,7 @@
     ".NETCoreApp,Version=v8.0/linux-x64": {
       "CTREngine/1.0.0": {
         "dependencies": {
+          "CppAst": "0.8.0",
           "Eto.Forms": "2.9.0",
           "Eto.Platform.Gtk": "2.9.0",
           "Microsoft.CodeAnalysis.CSharp": "4.13.0",
@@ -719,6 +720,31 @@
           }
         }
       },
+      "ClangSharp/10.0.0-beta": {
+        "dependencies": {
+          "Microsoft.Bcl.HashCode": "1.1.0",
+          "System.Memory": "4.5.5",
+          "libclang": "10.0.0",
+          "libClangSharp": "10.0.0-beta1"
+        },
+        "runtime": {
+          "lib/netcoreapp3.1/ClangSharp.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.0.0"
+          }
+        }
+      },
+      "CppAst/0.8.0": {
+        "dependencies": {
+          "ClangSharp": "10.0.0-beta"
+        },
+        "runtime": {
+          "lib/netstandard2.0/CppAst.dll": {
+            "assemblyVersion": "0.8.0.0",
+            "fileVersion": "0.8.0.0"
+          }
+        }
+      },
       "Eto.Forms/2.9.0": {
         "runtime": {
           "lib/net6.0/Eto.dll": {
@@ -785,6 +811,16 @@
           "lib/net6.0/GtkSharp.dll": {
             "assemblyVersion": "3.24.24.95",
             "fileVersion": "3.24.24.95"
+          }
+        }
+      },
+      "libclang/10.0.0": {},
+      "libClangSharp/10.0.0-beta1": {},
+      "Microsoft.Bcl.HashCode/1.1.0": {
+        "runtime": {
+          "lib/netcoreapp2.1/Microsoft.Bcl.HashCode.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "4.700.19.56404"
           }
         }
       },
@@ -1103,6 +1139,20 @@
       "path": "cairosharp/3.24.24.95",
       "hashPath": "cairosharp.3.24.24.95.nupkg.sha512"
     },
+    "ClangSharp/10.0.0-beta": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-l2PrtGYD2F1ojay1bgwqYCOpQxCH9jjxizyUG47K5kAC1fCaaThMT2H8frEka2LCccFzvSu0KQJAky2itf4SWQ==",
+      "path": "clangsharp/10.0.0-beta",
+      "hashPath": "clangsharp.10.0.0-beta.nupkg.sha512"
+    },
+    "CppAst/0.8.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-wYye7X5W4nXWGVEj+06UwztSoUiE6Ox5cnzz8L5Ayfd+ghd7X9ZbqKvxjZCdvoXVTwrbDWYHZtRwk5QHJcTqSQ==",
+      "path": "cppast/0.8.0",
+      "hashPath": "cppast.0.8.0.nupkg.sha512"
+    },
     "Eto.Forms/2.9.0": {
       "type": "package",
       "serviceable": true,
@@ -1144,6 +1194,27 @@
       "sha512": "sha512-RRUY45hAa5gsMcadvVjcLUzMjVtmuHSYTcIwM6j8LNgKhzFFHk69qM1D5ULfGxaWmVjicqNWiFtOtk8WsvPqaQ==",
       "path": "gtksharp/3.24.24.95",
       "hashPath": "gtksharp.3.24.24.95.nupkg.sha512"
+    },
+    "libclang/10.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SqUUQvGNjDY4mKXZ+4Iz1DkHnkkTxsANnvW4oewbVnnEZqJ5QjVV/e+yrlSe+56BeJtbqojNeGmTwt6IzyhD5Q==",
+      "path": "libclang/10.0.0",
+      "hashPath": "libclang.10.0.0.nupkg.sha512"
+    },
+    "libClangSharp/10.0.0-beta1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-860Pz/JVoL19ftjG8CmuKxWrxZwsnskvT9hnb0ZgKxO91l7w2ZZvY7C7KMDM3Rt2vvUY++GV0fL7iz50a0BWDw==",
+      "path": "libclangsharp/10.0.0-beta1",
+      "hashPath": "libclangsharp.10.0.0-beta1.nupkg.sha512"
+    },
+    "Microsoft.Bcl.HashCode/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-J2G1k+u5unBV+aYcwxo94ip16Rkp65pgWFb0R6zwJipzWNMgvqlWeuI7/+R+e8bob66LnSG+llLJ+z8wI94cHg==",
+      "path": "microsoft.bcl.hashcode/1.1.0",
+      "hashPath": "microsoft.bcl.hashcode.1.1.0.nupkg.sha512"
     },
     "Microsoft.CodeAnalysis.Analyzers/3.11.0": {
       "type": "package",

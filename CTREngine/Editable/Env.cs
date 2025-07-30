@@ -73,9 +73,9 @@ namespace CTR
     }
     public static class Env
     {
-        public static string ctrVersion = "0.0.9";
+        public static string ctrVersion = "0.1.0";
         public static string defaultPlatformID = "Dimolade.Windows";
-        public static string defaultCSMVersion = "2.0.6";
+        public static string defaultCSMVersion = "2.1.0";
         public static string defaultPlatformScript = @"
 public static class PlatformFunctions
 {

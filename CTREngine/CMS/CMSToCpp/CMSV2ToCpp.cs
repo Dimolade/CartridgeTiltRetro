@@ -250,6 +250,20 @@ namespace CMS
         }
     }
 
+    public class CMSV2ConstArg
+    {
+        public CMSV2Var var;
+        public string parName;
+        public bool isSet = true;
+
+        public CMSV2ConstArg(CMSV2Var v, string p, bool iS = true)
+        {
+            var = v;
+            parName = p;
+            isSet = iS;
+        }
+    }
+
     public class CMSV2Class
     {
         public string name;
@@ -399,15 +413,15 @@ namespace CMS
                     HandleClass();
                     break;
 
-                case "Loop":
+                case "loop":
                     HandleLoop();
                 break;
 
-                case "If":
+                case "if":
                     HandleIf();
                 break;
 
-                case "Return":
+                case "return":
                     currentCpp += "return ";
                     currentIndex++;
 
@@ -428,16 +442,16 @@ namespace CMS
                     }
                 break;
 
-                case "Point":
+                case "point":
                     HandlePoint();
                 break;
 
-                case "Goto":
+                case "goto":
                     HandleGoto();
                 break;
 
-                case "Else":
-                    if (Tokens[currentIndex + 1] == "If")
+                case "else":
+                    if (Tokens[currentIndex + 1] == "if")
                     {
                         currentIndex++;
                         currentCpp += "\nelse ";
@@ -451,23 +465,53 @@ namespace CMS
                     }
                 break;
     
-                case "Use":
+                case "use":
                     HandleUse();
                 break;
 
-                case "Include":
+                case "include":
                     HandleInclude();
                 break;
 
-                case "Coroutine":
+                case "constructor":
+                    HandleConstructor();
+                break;
+
+                case "foreach":
+                    HandleForeach();
+                break;
+
+                case "break":
+                    currentCpp += "break;";
+                    currentIndex++;
+                break;
+
+                case "continue":
+                    currentCpp += "continue;";
+                    currentIndex++;
+                break;
+
+                case "switch":
+                    HandleSwitch();
+                break;
+
+                case "case":
+                    HandleCase();
+                break;
+
+                case "while":
+                    HandleWhile();
+                break;
+
+                case "coroutine":
                     HandleCoroutine();
                 break;
 
-                case "List":
+                case "list":
                     HandleList();
                 break;
 
-                case "Delete":
+                case "delete":
                     currentIndex++;
                     currentCpp += "\n" + "delete " + getCurrentToken();
                     currentIndex++;
@@ -1287,6 +1331,274 @@ namespace CMS
             }
         }
 
+        const int argMax = 100;
+        void HandleConstructor()
+        {
+            currentIndex++; // Skip "constructor"
+            if (getCurrentToken() == "(")
+            {
+                currentIndex++;
+                // skip "("
+                bool cancelC = false;
+                string full = currentClass.name+"(";
+                List<CMSV2ConstArg> args = new List<CMSV2ConstArg>();
+                int abc = 0;
+                while (!cancelC)
+                {
+                    top:
+                    if (abc > argMax)
+                    {
+                        cancelC = true;
+                        CancelEarly(new ErrorReason("Overflow Error: ", "Stepped over argument limit while parsing, either this is a bug, or you should rethink your choices.", currentIndex));
+                        return;
+                    }
+                    if (cancel) { cancelC = true; return; }
+                    switch (getCurrentToken())
+                    {
+                        case "set":
+                        CMSV2ConstArg a = ConstHandleSet();
+                        if (a == null)
+                        {
+                            cancelC = true;
+                            return;
+                        }
+                        args.Add(a);
+                        break;
+
+                        case ")":
+                        cancelC = true;
+                        currentIndex++;
+                        break;
+
+                        case ",":
+                        currentIndex++;
+                        break;
+
+                        default:
+                        CMSV2ConstArg a2 = ConstHandlePar();
+                        args.Add(a2);
+                        break;
+                    }
+                    abc++;
+                }
+                after:
+
+                int i = 0;
+                bool incSetS = false;
+                foreach (CMSV2ConstArg ar in args)
+                {
+                    full += ar.var.returnType+" "+ar.parName;
+                    if (i < args.Count-1)
+                    {
+                        full += ", ";
+                    }
+                    if (ar.isSet) incSetS = true;
+                    i++;
+                }
+                full += ") "+ ( incSetS ? ": " : "" );
+                i = 0;
+                foreach (CMSV2ConstArg ar in args)
+                {
+                    if (ar.isSet)
+                    {
+                        full += ar.var.name+"("+ar.parName+")";
+
+                        if (i < args.Count-1)
+                        {
+                            full += ", ";
+                        }
+                    }
+                    i++;
+                }
+                if (getCurrentToken() != "{")
+                {
+                    CancelEarly(new ErrorReason("Error: ", "Expected Body in Constructor.", currentIndex));
+                    return;
+                }
+                full += " {\n";
+                currentCpp += "\n"+full;
+            }
+            else
+            {
+                CancelEarly(new ErrorReason("Error: ", "Constructors are as to be treated as function.", currentIndex));
+            }
+        }
+
+        CMSV2ConstArg ConstHandlePar()
+        {
+            string t = getCurrentToken();
+            currentIndex++;
+            string pn = getCurrentToken();
+            currentIndex++;
+            CMSV2Var v = new CMSV2Var(pn,t);
+            return new CMSV2ConstArg(v, pn, false);
+        }
+
+        CMSV2ConstArg ConstHandleSet()
+        {
+            currentIndex++; // skip set
+            string toSet = getCurrentToken();
+            CMSV2Var v = null;
+
+            foreach (CMSV2Var s in currentClassVar)
+            {
+                if (toSet == s.name)
+                {
+                    v = s;
+                    break;
+                }
+            }
+            if (v == null)
+            {
+                CancelEarly(new ErrorReason("Error: ", "Variable not part of class.", currentIndex));
+                return null;
+            }
+            
+            currentIndex++;
+            if (getCurrentToken() == ")")
+            {
+                CancelEarly(new ErrorReason("Error: ", "Constructor Syntax is: constructor ( set <varName> <parameterName> )", currentIndex));
+            }
+            string parName = getCurrentToken();
+            currentIndex++;
+
+            return new CMSV2ConstArg(v, parName);
+        }
+
+        void HandleSwitch()
+        {
+            Console.WriteLine("Handle Switch");
+            currentIndex++; // skip "switch"
+            if (getCurrentToken() != "(")
+            {
+                CancelEarly(new ErrorReason("Error: ", "Expected Paranthesis Opening.", currentIndex));
+                return;
+            }
+            currentIndex++; // SKIP (
+            currentCpp += "\nswitch (";
+            while (getCurrentToken() != ")")
+            {
+                currentCpp += HandlePossbileReturnerArgs(getCurrentToken())+" ";
+                if (getCurrentToken() == ")") break;
+
+                if (currentCpp.EndsWith(getCurrentToken()+" ") == true)
+                    currentIndex++;
+
+                if (getCurrentToken() == ")") break;
+            }
+            currentCpp += ") {";
+            currentIndex++;
+
+            if (getCurrentToken() != "{")
+            {
+                CancelEarly(new ErrorReason("Error: ", "Expected Body in switch.", currentIndex));
+                return;
+            }
+        }
+
+        void HandleCase()
+        {
+            Console.WriteLine("Handle Case");
+            currentIndex++; // skip case;
+            if (getCurrentToken() == "default")
+            {
+                currentIndex++;
+                if (getCurrentToken() != ":")
+                {
+                    CancelEarly(new ErrorReason("Error: ", "Expected colon in case.", currentIndex));
+                    return;
+                }
+                currentCpp += "\ndefault:\n";
+            }
+            else
+            {
+                currentCpp += "\ncase ";
+                while (getCurrentToken() != ":")
+                {
+                    currentCpp += HandlePossbileReturnerArgs(getCurrentToken())+" ";
+                    if (getCurrentToken() == ":") break;
+
+                    if (currentCpp.EndsWith(getCurrentToken()+" ") == true)
+                        currentIndex++;
+
+                    if (getCurrentToken() == ":") break;
+                }
+                currentCpp += ":\n";
+            }
+        }
+
+        void HandleForeach()
+        {
+            currentIndex++; // skip foreach
+            if (getCurrentToken() != "(")
+            {
+                CancelEarly(new ErrorReason("Error: ", "Was Expecting Paranthesis Opening.", currentIndex));
+                return;
+            }
+            currentIndex++; // skip (
+
+            currentCpp += "for ( ";
+            string t = getCurrentToken();
+            currentIndex++;
+            string varName = getCurrentToken();
+            currentIndex++;
+            if (getCurrentToken() != "in")
+            {
+                CancelEarly(new ErrorReason("Error: ", "Was Expecting 'in' in foreach.", currentIndex));
+                return;
+            }
+            currentIndex++;
+            string arrayName = getCurrentToken();
+            currentIndex++;
+            if (getCurrentToken() != ")")
+            {
+                CancelEarly(new ErrorReason("Error: ", "Was Expecting Paranthesis Closing.", currentIndex));
+                return;
+            }
+            currentIndex++;
+            currentCpp += t+" "+varName+" : "+arrayName+" ) {\n";
+
+            if (getCurrentToken() != "{")
+            {
+                CancelEarly(new ErrorReason("Error: ", "Expected Body in foreach.", currentIndex));
+                return;
+            }
+        }
+
+        void HandleWhile ()
+        {
+            currentIndex++; // should be while
+            currentCpp += "while (";
+            Console.WriteLine("###### If Handler ######");
+            if (getCurrentToken() != "(")
+            {
+                CancelEarly(new ErrorReason("Error: ", "Was Expecting Paranthesis Opening.", currentIndex));
+                return;
+            }
+            currentIndex++;
+            Console.WriteLine("Token after while ( is " + getCurrentToken());
+            while (getCurrentToken() != ")")
+            {
+                currentCpp += HandlePossbileReturnerArgs(getCurrentToken()) + " ";
+                if (getCurrentToken() == ")")
+                {
+                    break;
+                }
+                
+                if (currentCpp.EndsWith(getCurrentToken()+" ") == true)
+                    currentIndex++;
+                
+                if (getCurrentToken() == ")")
+                {
+                    break;
+                }
+            }
+            currentIndex++;
+
+            currentCpp += ") ";
+            handleFunctionContents(false);
+        }
+
         void handleReturner()
         {
             Console.WriteLine("Handling Returner.");
@@ -1350,7 +1662,7 @@ namespace CMS
         void handleFunction(bool addOV)
         {
             currentIndex++;
-            bool hasParameters = getCurrentToken() == "parameter";
+            bool hasParameters = getCurrentToken() != ")";
             currentCpp += "(";
             if (!hasParameters)
             {
@@ -1609,7 +1921,7 @@ namespace CMS
                 }
             }
 
-            if (curTok == "Return")
+            if (curTok == "return")
             {
                 currentCpp += "return ";
                 currentIndex++;

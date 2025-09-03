@@ -706,9 +706,9 @@ public class CTRBD // Build Definitions
     const string defBase = "#define ";
 
     public List<CTRBDSet> Definitions = new List<CTRBDSet>(); // 0 is Global, after that is platforms.
-    public string GenerateHeader()
+    public string GenerateHeader(string platId)
     {
-        int length = calcLength();
+        int length = calcLength(platId);
         StringBuilder sb = new StringBuilder(length);
         List<string> nameList = new List<string>();
         nameList.Add("Global");
@@ -732,7 +732,7 @@ public class CTRBD // Build Definitions
         return sb.ToString();
     }
 
-    int calcLength()
+    int calcLength(string platId)
     {
         int cur = 0;
         List<string> nameList = new List<string>();
@@ -744,6 +744,7 @@ public class CTRBD // Build Definitions
         int i = 0;
         foreach (CTRBDSet s in Definitions)
         {
+            if (s.platformId != "Global" && s.platformId != platId) continue;
             cur += commentBase.Length + nameList[i].Length + 1; // +1 for newline
             foreach (CTRBDMember mem in s.toDefine)
             {
@@ -760,6 +761,7 @@ public class CTRBD // Build Definitions
 
 public class CTRBDSet
 {
+    public string platformId = "";
     public List<CTRBDMember> toDefine = new List<CTRBDMember>();
 }
 
@@ -795,6 +797,7 @@ public class CTRBDWindow
         var defList = new GridView();
         defList.Height = y - 400;
         defList.ShowHeader = false;
+        defList.AllowMultipleSelection = true;
 
         defList.Columns.Add(new GridColumn
         {
@@ -823,6 +826,18 @@ public class CTRBDWindow
             Editable = true,
             Width = 50
         });
+
+        Button removeButton = new Button { Text = "Remove Selected" };
+
+        removeButton.Click += (sender, e) =>
+        {
+            if (defList.SelectedItems.Count() < 0) return;
+            foreach (var mem in defList.SelectedItems.Cast<CTRBDMember>())
+            {
+                currentBD.Definitions[typeDropDown.SelectedIndex].toDefine.Remove(mem);
+            }
+            RefreshAll();
+        };
         
         SaveButton.Click += (sender, e) =>
         {
@@ -839,12 +854,19 @@ public class CTRBDWindow
 
         int lastIndex = typeDropDown.SelectedIndex;
 
+        string FromNameList(int index)
+        {
+            return nameList[index];
+        }
+
         typeDropDown.SelectedIndexChanged += (sender, e) =>
         {
             idkwhyimdoingthislikethis:
             if (currentBD.Definitions.Count <= typeDropDown.SelectedIndex)
             {
-                currentBD.Definitions.Add(new CTRBDSet()); // Make new
+                CTRBDSet set = new CTRBDSet();
+                set.platformId = FromNameList(currentBD.Definitions.Count);
+                currentBD.Definitions.Add(set); // Make new
                 if (currentBD.Definitions.Count <= typeDropDown.SelectedIndex) goto idkwhyimdoingthislikethis;
             }
             currentBD.Definitions[lastIndex].toDefine = defList.DataStore.Cast<CTRBDMember>().ToList();
@@ -864,7 +886,9 @@ public class CTRBDWindow
             idkwhyimdoingthislikethis:
             if (currentBD.Definitions.Count <= typeDropDown.SelectedIndex)
             {
-                currentBD.Definitions.Add(new CTRBDSet()); // Make new
+                CTRBDSet set = new CTRBDSet();
+                set.platformId = FromNameList(currentBD.Definitions.Count);
+                currentBD.Definitions.Add(set); // Make new
                 if (currentBD.Definitions.Count <= typeDropDown.SelectedIndex) goto idkwhyimdoingthislikethis;
             }
             foreach (CTRBDMember bdmem in currentBD.Definitions[typeDropDown.SelectedIndex].toDefine)
@@ -927,6 +951,7 @@ public class CTRBDWindow
                             Orientation = Orientation.Vertical,
                             Spacing = 10,
                             Items = { new StackLayout {Orientation = Orientation.Horizontal, Items = {typeDropDown, AddButton}},
+                                removeButton,
                                 defList,
                                 new Label {Text = "Remember, CTRBD's should be named BuildDefs.ctrbd and be in Project/Assets/"},
                                 SaveButton

@@ -5,6 +5,8 @@ using CTR;
 using System.Linq;
 using System.IO;
 using Newtonsoft.Json;
+using System.ComponentModel;
+using System.Text;
 
 namespace CTR
 {
@@ -38,7 +40,8 @@ namespace CTR
 enum CreateableAT
 {
     ImageFont,
-    GameData
+    GameData,
+    BuildDefinitions
 }
 
 public class AssetMaker : Form
@@ -138,19 +141,33 @@ public class AssetMaker : Form
                 }
             }
             else if (Path.GetExtension(SF) == ".ctrgd")
-                {
-                    CTRGDWindow ctrWindow = new CTRGDWindow(y);
-                    var content = ctrWindow.CreateContent(SelectFile);
+            {
+                CTRGDWindow ctrWindow = new CTRGDWindow(y);
+                var content = ctrWindow.CreateContent(SelectFile, SF);
 
-                    // Insert the content below the button panel
-                    if (Content is StackLayout layout)
-                    {
-                        if (layout.Items.Count == 1)
-                            layout.Items.Add(content); // Adds after button panel
-                        else
-                            layout.Items[1] = content; // Replace old content
-                    }
+                // Insert the content below the button panel
+                if (Content is StackLayout layout)
+                {
+                    if (layout.Items.Count == 1)
+                        layout.Items.Add(content); // Adds after button panel
+                    else
+                        layout.Items[1] = content; // Replace old content
                 }
+            }
+            else if (Path.GetExtension(SF) == ".ctrbd")
+            {
+                CTRBDWindow ctrWindow = new CTRBDWindow(y);
+                var content = ctrWindow.CreateContent(SelectFile, SF);
+
+                // Insert the content below the button panel
+                if (Content is StackLayout layout)
+                {
+                    if (layout.Items.Count == 1)
+                        layout.Items.Add(content); // Adds after button panel
+                    else
+                        layout.Items[1] = content; // Replace old content
+                }
+            }
             // Open File
         }
         else if (name == "New Asset...")
@@ -179,6 +196,20 @@ public class AssetMaker : Form
                 else if (AP == CreateableAT.GameData)
                 {
                     CTRGDWindow ctrWindow = new CTRGDWindow(y);
+                    var content = ctrWindow.CreateContent(SelectFile);
+
+                    // Insert the content below the button panel
+                    if (Content is StackLayout layout)
+                    {
+                        if (layout.Items.Count == 1)
+                            layout.Items.Add(content); // Adds after button panel
+                        else
+                            layout.Items[1] = content; // Replace old content
+                    }
+                }
+                else if (AP == CreateableAT.BuildDefinitions)
+                {
+                    CTRBDWindow ctrWindow = new CTRBDWindow(y);
                     var content = ctrWindow.CreateContent(SelectFile);
 
                     // Insert the content below the button panel
@@ -664,6 +695,253 @@ public class CTRGDWindow
             currentGD = JsonConvert.DeserializeObject<CTRGD>(File.ReadAllText(filePath));
             RefreshAll();
         }
+
+        return layout;
+    }
+}
+
+public class CTRBD // Build Definitions
+{
+    const string commentBase = "// Definitions for ";
+    const string defBase = "#define ";
+
+    public List<CTRBDSet> Definitions = new List<CTRBDSet>(); // 0 is Global, after that is platforms.
+    public string GenerateHeader()
+    {
+        int length = calcLength();
+        StringBuilder sb = new StringBuilder(length);
+        List<string> nameList = new List<string>();
+        nameList.Add("Global");
+        foreach (CTR.Platform p in CTR.FileManager.Platforms.GetPlatforms())
+        {
+            nameList.Add(p.name);
+        }
+        int i = 0;
+        foreach (CTRBDSet s in Definitions)
+        {
+            sb.Append(commentBase + nameList[i] + "\n");
+            foreach (CTRBDMember mem in s.toDefine)
+            {
+                if (mem.enabled ?? false)
+                {
+                    sb.Append(defBase + mem.defname + " " + mem.value + "\n");
+                }
+            }
+            i++;
+        }
+        return sb.ToString();
+    }
+
+    int calcLength()
+    {
+        int cur = 0;
+        List<string> nameList = new List<string>();
+        nameList.Add("Global");
+        foreach (CTR.Platform p in CTR.FileManager.Platforms.GetPlatforms())
+        {
+            nameList.Add(p.name);
+        }
+        int i = 0;
+        foreach (CTRBDSet s in Definitions)
+        {
+            cur += commentBase.Length + nameList[i].Length + 1; // +1 for newline
+            foreach (CTRBDMember mem in s.toDefine)
+            {
+                if (mem.enabled ?? false)
+                {
+                    cur += mem.defname.Length + mem.value.Length + defBase.Length + 2; // +1 for newline, +1 for space between value
+                }
+            }
+            i++;
+        }
+        return cur;
+    }
+}
+
+public class CTRBDSet
+{
+    public List<CTRBDMember> toDefine = new List<CTRBDMember>();
+}
+
+public class CTRBDMember
+{
+    public string defname { get; set; } = "Name";
+    public string value { get; set; } = "0";
+    public bool? enabled { get; set; } = true;
+}
+
+public class CTRBDWindow
+{
+    private int y;
+    private StackLayout layout;
+
+    public CTRBDWindow(int availableHeight)
+    {
+        y = availableHeight;
+    }
+
+    public StackLayout CreateContent(Func<string> selectFileCallback, string filePath = null)
+    {
+        var currentBD = new CTRBD();
+        var SaveButton = new Button { Text = "Save CTR Build Definitions as File..." };
+        var AddButton = new Button { Text = "+" };
+        List<string> nameList = new List<string>();
+        nameList.Add("Global");
+        foreach (CTR.Platform p in CTR.FileManager.Platforms.GetPlatforms())
+        {
+            nameList.Add(p.name);
+        }
+        var typeDropDown = new DropDown { DataStore = nameList, SelectedIndex = 0, Width = 500 };
+        var defList = new GridView();
+        defList.Height = y - 400;
+        defList.ShowHeader = false;
+
+        defList.Columns.Add(new GridColumn
+        {
+            DataCell = new TextBoxCell { Binding = Binding.Property<CTRBDMember, string>(r => r.defname) },
+            Editable = true,
+            Width = 300
+        });
+
+        defList.Columns.Add(new GridColumn
+        {
+            DataCell = new TextBoxCell { Binding = Binding.Delegate<CTRBDMember, string>(r => "=") },
+            Editable = false,
+            Width = 30
+        });
+
+        defList.Columns.Add(new GridColumn
+        {
+            DataCell = new TextBoxCell { Binding = Binding.Property<CTRBDMember, string>(r => r.value) },
+            Editable = true,
+            Width = 150
+        });
+
+        defList.Columns.Add(new GridColumn
+        {
+            DataCell = new CheckBoxCell { Binding = Binding.Property<CTRBDMember, bool?>(r => r.enabled) },
+            Editable = true,
+            Width = 50
+        });
+        
+        SaveButton.Click += (sender, e) =>
+        {
+            string path = GetSaveFilePath(
+            "Save CTR Build Definitions",
+            new[] { "CTRBD File|ctrbd" }
+            );
+
+            if (path != null)
+            {
+                File.WriteAllText(path, JsonConvert.SerializeObject(currentBD));
+            }
+        };
+
+        int lastIndex = typeDropDown.SelectedIndex;
+
+        typeDropDown.SelectedIndexChanged += (sender, e) =>
+        {
+            idkwhyimdoingthislikethis:
+            if (currentBD.Definitions.Count <= typeDropDown.SelectedIndex)
+            {
+                currentBD.Definitions.Add(new CTRBDSet()); // Make new
+                if (currentBD.Definitions.Count <= typeDropDown.SelectedIndex) goto idkwhyimdoingthislikethis;
+            }
+            currentBD.Definitions[lastIndex].toDefine = defList.DataStore.Cast<CTRBDMember>().ToList();
+            lastIndex = typeDropDown.SelectedIndex;
+            RefreshAll();
+        };
+
+        AddButton.Click += (sender, e) =>
+        {
+            currentBD.Definitions[typeDropDown.SelectedIndex].toDefine.Add(new CTRBDMember());
+            RefreshAll();
+        };
+
+        void RefreshAll()
+        {
+            List<CTRBDMember> bdmembers = new List<CTRBDMember>();
+            idkwhyimdoingthislikethis:
+            if (currentBD.Definitions.Count <= typeDropDown.SelectedIndex)
+            {
+                currentBD.Definitions.Add(new CTRBDSet()); // Make new
+                if (currentBD.Definitions.Count <= typeDropDown.SelectedIndex) goto idkwhyimdoingthislikethis;
+            }
+            foreach (CTRBDMember bdmem in currentBD.Definitions[typeDropDown.SelectedIndex].toDefine)
+            {
+                bdmembers.Add(bdmem);
+            }
+            defList.DataStore = new BindingList<CTRBDMember>(bdmembers);
+        }
+
+        string GetSaveFilePath(string title = "Save File", string[] filters = null)
+        {
+            var dialog = new SaveFileDialog
+            {
+                Title = title
+            };
+
+            if (filters != null)
+            {
+                foreach (var filter in filters)
+                {
+                    var parts = filter.Split('|');
+                    if (parts.Length == 2)
+                    {
+                        var f = new FileDialogFilter
+                        {
+                            Name = parts[0],
+                            Extensions = new[] { parts[1] } // This avoids calling Add
+                        };
+                        dialog.Filters.Add(f);
+                    }
+                }
+            }
+            else
+            {
+                dialog.Filters.Add(new FileDialogFilter
+                {
+                    Name = "All Files",
+                    Extensions = new[] { "*" }
+                });
+            }
+
+            var result = dialog.ShowDialog(null);
+            return result == DialogResult.Ok ? dialog.FileName : null;
+        }
+
+        layout = new StackLayout
+        {
+            Orientation = Orientation.Vertical,
+            Spacing = 10,
+            Items =
+            {
+                new StackLayout
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 10,
+                    Items =
+                    {
+                        new StackLayout
+                        {
+                            Orientation = Orientation.Vertical,
+                            Spacing = 10,
+                            Items = { new StackLayout {Orientation = Orientation.Horizontal, Items = {typeDropDown, AddButton}},
+                                defList,
+                                new Label {Text = "Remember, CTRBD's should be named BuildDefs.ctrbd and be in Project/Assets/"},
+                                SaveButton
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        if (filePath != null)
+        {
+            currentBD = JsonConvert.DeserializeObject<CTRBD>(File.ReadAllText(filePath));
+        }
+        RefreshAll();
 
         return layout;
     }

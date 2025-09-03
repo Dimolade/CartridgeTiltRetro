@@ -4,6 +4,7 @@ using Eto.Drawing;
 using System.IO;
 using CTR.Projects;
 using CMS;
+using Newtonsoft.Json;
 
 public static class CMSWatcher
 {
@@ -177,6 +178,9 @@ public static class Builder
             string bpath = CTR.FileManager.Paths.GetCTRPath() + (string)PlatformDLLLoader.GetValueFromDll(Path.Combine(p2.installPath, "MainAssembly.dll"),
                 "sourceDirectory"
                 );
+
+            if (File.Exists(Path.Combine(p.path, "Assets/BuildDefs.ctrbd")))
+                File.WriteAllText(targetPath + "BuildDefinitions.h", JsonConvert.DeserializeObject<CTRBD>(File.ReadAllText(Path.Combine(p.path, "Assets/BuildDefs.ctrbd"))).GenerateHeader());
 
             /*List<CMSV2ConversionResult> ress = new List<CMSV2ConversionResult>();
             List<SceneObject> sos = new List<SceneObject>();

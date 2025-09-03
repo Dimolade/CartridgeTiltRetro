@@ -530,6 +530,27 @@ namespace CMS
                     //AddNLS();
                 break;
 
+                // preprodecce- whatever those are called you know what i mean
+
+                case "#ifndef":
+                case "#ifdef":
+                    currentIndex++;
+                    currentCpp += "\n#ifdef " + getCurrentToken() + "\n";
+                break;
+
+                case "#else":
+                case "#endif":
+                    currentCpp += getCurrentToken();
+                break;
+
+                case "#elif":
+                case "#if":
+                    currentIndex++; //       name                      ==/!= etc                 10
+                    currentCpp += "\n#if " + getCurrentToken(); currentIndex++; currentCpp += " " + getCurrentToken() + " "; currentIndex++; currentCpp += getCurrentToken() + "\n";
+                break;
+
+                // other shit
+
                 case "/*":
                     inComment = true;
                     while (inComment)

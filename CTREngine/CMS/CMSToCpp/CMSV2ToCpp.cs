@@ -306,6 +306,7 @@ namespace CMS
         public List<CMSV2Conversion> converted;
         public string fileName;
         bool nextIsList = false;
+        bool noDefaultConstructor = true;
         int run = 0; //run 0 is symbol collection, run 1 is actual conversion
 
         public void DoSymbolRun(string buildDir)
@@ -1337,7 +1338,8 @@ namespace CMS
         void HandleClassClose()
         {
             if (currentClass == null) { CancelEarly(new ErrorReason("Error while Parsing: ","CurrentClass was null while Parsing.", currentIndex)); return; }
-            currentCpp += "\npublic:\n" + currentClass.name + "() {}\n";
+            if (noDefaultConstructor)
+                currentCpp += "\npublic:\n" + currentClass.name + "() {}\n";
         }
 
         void handleVarOrFunc(bool useS = true)
@@ -1403,6 +1405,11 @@ namespace CMS
                     abc++;
                 }
                 after:
+
+                if (abc == 1) // no args
+                {
+                    noDefaultConstructor = false;
+                }
 
                 int i = 0;
                 bool incSetS = false;
@@ -1701,7 +1708,6 @@ namespace CMS
             }
             else
             {
-                currentIndex++;
                 int defaultStart = -1;
                 int i = 0;
                 while (getCurrentToken() != ")")

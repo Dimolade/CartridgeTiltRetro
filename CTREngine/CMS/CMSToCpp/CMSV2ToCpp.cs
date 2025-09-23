@@ -474,6 +474,10 @@ namespace CMS
                     HandleInclude();
                 break;
 
+                case "__cpp":
+                    HandleCppBlock();
+                break;
+
                 case "constructor":
                     HandleConstructor();
                 break;
@@ -885,6 +889,27 @@ namespace CMS
                 return ts + " )";
             }
             return TryTranslate(thisToken);
+        }
+
+        void HandleCppBlock()
+        {
+            currentIndex++; // skip "__cpp"
+            while (currentIndex < Tokens.Count)
+            {
+                if (Tokens[currentIndex] == "__cms")
+                {
+                    break;
+                }
+                else if (Tokens[currentIndex] == "\\n")
+                {
+                    currentCpp += "\n";
+                }
+                else
+                {
+                    currentCpp += Tokens[currentIndex]+" ";
+                }
+                currentIndex++;
+            }
         }
 
         void HandleUse()

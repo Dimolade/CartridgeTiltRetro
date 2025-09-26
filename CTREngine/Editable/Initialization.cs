@@ -118,7 +118,11 @@ float Math::Abs
 CTRSaveSystem CTRSaveSystem
 CTRSaveSystem CTRSaveSystem
 string Convert.ToString
-string to_string";
+string std::to_string
+void Resources.OccupySprite
+void Resources::OccupySprite
+void Resources.DeOccupySprite
+void Resources::DeOccupySprite";
 		public static void Init()
 		{
 			string path = Path.Combine(Paths.GetCTRPath(), "DefaultBuild/");
@@ -126,7 +130,8 @@ string to_string";
 			{
 				Directory.CreateDirectory(path);
 			}
-			File.WriteAllText(Path.Combine(path, "TRANSLATOR.cmsv2t"), DefaultTranslator);
+			if (!File.Exists(Path.Combine(path, "TRANSLATOR.cmsv2t")))
+				File.WriteAllText(Path.Combine(path, "TRANSLATOR.cmsv2t"), DefaultTranslator);
 		}
 	}
 }

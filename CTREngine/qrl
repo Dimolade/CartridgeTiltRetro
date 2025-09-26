@@ -1,2 +1,2 @@
 #!/bin/bash
-dotnet run --framework net8.0 > log.txt 2>&1
+dotnet run --framework net8.0

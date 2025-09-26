@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CTREngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ee67315e7449bec80ac99e3d350480446ad37cfc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+573cf5bb4c9a36ea6d73b626453e988dc65acf57")]
 [assembly: System.Reflection.AssemblyProductAttribute("CTREngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CTREngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

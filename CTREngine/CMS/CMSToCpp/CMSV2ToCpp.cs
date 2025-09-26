@@ -235,7 +235,8 @@ namespace CMS
         Public,
         Protected,
         Override,
-        Overrideable
+        Overrideable,
+        Const
     }
 
     public class CMSV2Var
@@ -394,6 +395,9 @@ namespace CMS
             {
                 case "static":
                     currentAdds.Add(TokenAdditives.Static);
+                    break;
+                case "const":
+                    currentAdds.Add(TokenAdditives.Const);
                     break;
                 case "override":
                     currentAdds.Add(TokenAdditives.Override);
@@ -1676,6 +1680,7 @@ namespace CMS
                 addOV = true;
             }
             currentIndex++;
+            bool isConst = currentAdds.Contains(TokenAdditives.Const);
             if (nextIsList) currentIndex++; // skip over closing >
             currentAdds.Clear();
             string varName = getCurrentToken();
@@ -1684,7 +1689,7 @@ namespace CMS
             currentIndex++;
             isFunc = getCurrentToken() == "(";
 
-            currentCpp += ((isClassStatic == true && (!inFunction || isFunc)) ? "static " : "") + ((isFunc || isClassStatic == true) ? "inline " : "") + ( isOVAD ? "virtual " : "" ) + (nextIsList ? "List<" : "") + returnType + (nextIsList ? ">" : "");
+            currentCpp += ((isClassStatic == true && (!inFunction || isFunc)) ? "static " : "") + ((isFunc || isClassStatic == true) ? "inline " : "") + (isConst ? "const " : "") + ( isOVAD ? "virtual " : "" ) + (nextIsList ? "List<" : "") + returnType + (nextIsList ? ">" : "");
             nextIsList = false;
             currentCpp += " " + varName;
             Console.WriteLine("Created \"" + varName + "\" of Type \"" + returnType + "\""+" in class: "+inClass.ToString()+" isStaticClass?: "+isClassStatic.ToString());
@@ -1797,6 +1802,25 @@ namespace CMS
             currentIndex++;
         }
 
+        bool isNum(string arg)
+        {
+            foreach (CMSV2Var var in currentClassVar)
+            {
+                if ((var.returnType == "int" || var.returnType == "float" || var.returnType == "double") && var.name == arg)
+                {
+                    return true;
+                }
+            }
+            foreach (CMSV2Var var in currentLocalVar)
+            {
+                if ((var.returnType == "int" || var.returnType == "float" || var.returnType == "double") && var.name == arg)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         void HandleLoop()
         {
             currentCpp += "\n";
@@ -1807,6 +1831,11 @@ namespace CMS
             string varName = "i";
             bool firstArgNum = false;
             if (int.TryParse(getCurrentToken(), out _))
+            {
+                loopCount = getCurrentToken();
+                firstArgNum = true;
+            }
+            else if (isNum(getCurrentToken()))
             {
                 loopCount = getCurrentToken();
                 firstArgNum = true;
@@ -1828,6 +1857,10 @@ namespace CMS
                 else if (getCurrentToken() != ")")
                 {
                     startIndex = getCurrentToken();
+                }
+                else if (getCurrentToken() == ")")
+                {
+                    goto done;
                 }
             }
             else
@@ -1856,6 +1889,7 @@ namespace CMS
                 currentIndex++;
             }
 
+            done:
             currentCpp += $"for ( int {varName} = {startIndex}; {varName} < {loopCount}; {varName}++ )";
             if (getCurrentToken() != ")")
             {
@@ -2101,6 +2135,7 @@ namespace CMS
                     else
                     {
                         Console.WriteLine("In Function: " + var + " Tokens -2 = " + Tokens[currentIndex - 2]);
+                        currentIndex--;
                     }
                     if (getCurrentToken() == ";") return f;
                     /*else

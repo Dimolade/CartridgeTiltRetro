@@ -2135,7 +2135,7 @@ namespace CMS
                     else
                     {
                         Console.WriteLine("In Function: " + var + " Tokens -2 = " + Tokens[currentIndex - 2]);
-                        //currentIndex--;
+                        currentIndex--; // what is wrong with this brooo
                     }
                     if (getCurrentToken() == ";") return f;
                     /*else

@@ -122,7 +122,9 @@ string std::to_string
 void Resources.OccupySprite
 void Resources::OccupySprite
 void Resources.DeOccupySprite
-void Resources::DeOccupySprite";
+void Resources::DeOccupySprite
+bool CTRGamePlayer.shouldExit
+bool CTRGamePlayer::shouldExit";
 		public static void Init()
 		{
 			string path = Path.Combine(Paths.GetCTRPath(), "DefaultBuild/");

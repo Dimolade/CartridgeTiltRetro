@@ -321,10 +321,12 @@ public class CTRIFWindow
             {
                 foreach (string f in Directory.GetFiles(path))
                 {
-                    if (f.EndsWith("png"))
+                    if (f.EndsWith(".png"))
                     {
                         Bitmap b = new Bitmap(f);
-                        currentIF.Chars.Add(new CTRIFChar(Path.GetFileNameWithoutExtension(f)[0], f, b.Width, b.Height));
+                        string woE = Path.GetFileNameWithoutExtension(f);
+                        char name = woE[woE.Length-1];
+                        currentIF.Chars.Add(new CTRIFChar(name, f, b.Width, b.Height));
                         b.Dispose();
                     }
                 }

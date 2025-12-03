@@ -544,12 +544,12 @@ namespace CMS
                 case "#ifndef":
                 case "#ifdef":
                     currentIndex++;
-                    currentCpp += "\n#ifdef " + getCurrentToken() + "\n";
+                    currentCpp += "\n"+thisToken+" " + getCurrentToken() + "\n";
                 break;
 
                 case "#else":
                 case "#endif":
-                    currentCpp += getCurrentToken();
+                    currentCpp += "\n"+getCurrentToken()+"\n";
                 break;
 
                 case "#elif":

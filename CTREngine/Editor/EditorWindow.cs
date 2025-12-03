@@ -268,12 +268,18 @@ namespace CTR
 
         public Asset(string path)
         {
+            Console.WriteLine(path);
             this.path = path;
 
-            string[] both = Path.GetFileName(path).Split('.');
+            string n = Path.GetFileNameWithoutExtension(path);
+            string ext = Path.GetExtension(path);
+            if (ext != "")
+            {
+                ext = ext.Substring(1);
+            }
 
-            name = both[0];
-            extension = both[1];
+            name = n;
+            extension = ext;
 
             SetLPath();
         }

@@ -1,4 +1,5 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y71EUBQS)
+# ARCHIVED
+This engine SUCKS! Don't use it, it probably won't even work anyways!
 
 # CartridgeTiltRetro
 Game Engine made in C#, made for C++ Devices.
